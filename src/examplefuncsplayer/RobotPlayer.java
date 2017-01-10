@@ -1,4 +1,6 @@
 package examplefuncsplayer;
+import com.battlecode.Robots.*;
+
 import battlecode.common.*;
 
 public strictfp class RobotPlayer {
@@ -19,7 +21,7 @@ public strictfp class RobotPlayer {
         // You can add the missing ones or rewrite this into your own control structure.
         switch (rc.getType()) {
             case ARCHON:
-                runArchon();
+                BotArchon.runArchon();
                 break;
             case GARDENER:
                 runGardener();
@@ -44,7 +46,7 @@ public strictfp class RobotPlayer {
 
                 // Generate a random direction
                 Direction dir = randomDirection();
-
+                
                 // Randomly attempt to build a gardener in this direction
                 if (rc.canHireGardener(dir) && Math.random() < .01) {
                     rc.hireGardener(dir);
@@ -52,7 +54,8 @@ public strictfp class RobotPlayer {
 
                 // Move randomly
                 tryMove(randomDirection());
-
+         
+                
                 // Broadcast archon's location for other robots on the team to know
                 MapLocation myLocation = rc.getLocation();
                 rc.broadcast(0,(int)myLocation.x);
@@ -188,7 +191,7 @@ public strictfp class RobotPlayer {
      * Returns a random Direction
      * @return a random Direction
      */
-    static Direction randomDirection() {
+    public static Direction randomDirection() {
         return new Direction((float)Math.random() * 2 * (float)Math.PI);
     }
 
@@ -199,7 +202,7 @@ public strictfp class RobotPlayer {
      * @return true if a move was performed
      * @throws GameActionException
      */
-    static boolean tryMove(Direction dir) throws GameActionException {
+    public static boolean tryMove(Direction dir) throws GameActionException {
         return tryMove(dir,20,3);
     }
 
