@@ -16,7 +16,7 @@ public enum CreationStatus {
 		
 		
 		
-	    private final String type;   // in kilograms
+	    private final String type; 
 	    CreationStatus(String typeNew) {
 	        this.type = typeNew;
 	    }

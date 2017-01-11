@@ -1,9 +1,13 @@
 package com.battlecode.Robots;
 
 import java.util.HashMap;
-import java.util.Set;
 
-import battlecode.common.*;
+import com.battlecode.Helpers.RobotPersonality;
+
+import battlecode.common.Direction;
+import battlecode.common.GameActionException;
+import battlecode.common.MapLocation;
+import battlecode.common.RobotInfo;
 
 public class BotSoldier extends Globals {
 	static boolean danger, onMission;
@@ -12,30 +16,26 @@ public class BotSoldier extends Globals {
 	static RobotInfo[] enemyRobots;
 	static MapLocation currentLocation;
 	static Direction movement;
+	public RobotPersonality myPersonality;
 
-	public static void loop() {
+	public void runSoldier() {
 
 		try{
-
-
-			updateLocalEnvironment();
-
-
-			//TODO we should put in logic to determine if the soldier we create should be a fighter or a defender. 
-
-			if(danger){
-				//TODO Fight logic 
-				if(!rc.hasAttacked()){
-					attackClosestEnemy();
-				}
-			}
-			else{	
-				if(!Globals.initialEnemyArchonLocatonsChecked & !onMission){
-					scoutInitialEnemyArchonLocations();
-				}
-				footSoldierMovement();
+			
+			switch(myPersonality){
+			case ATTACKER:
+				actAsAttacker();
+				break;
+			case DEFENDER:
+				actAsDefender();
+				break;
+			default:
+				actAsAttacker();
+				break;
+			
 			}
 		}
+		
 		catch (Exception e) {
 			System.out.println("LumberJack Exception");
 			e.printStackTrace();
@@ -43,10 +43,62 @@ public class BotSoldier extends Globals {
 
 	}
 
+	private void actAsAttacker() throws GameActionException {
+
+		updateLocalEnvironment();
+
+		//TODO we should put in logic to determine if the soldier we create should be a fighter or a defender. 
+
+		if(danger){
+			//TODO Fight logic 
+			if(!rc.hasAttacked()){
+				attackClosestEnemy();
+
+			}
+		}
+		else{	
+			if(!Globals.initialEnemyArchonLocatonsChecked & !onMission){
+				scoutInitialEnemyArchonLocations();
+			}
+			
+			footSoldierMovement();
+		
+		}
+	}	
+
+	
+	private void actAsDefender() throws GameActionException {
+
+		updateLocalEnvironment();
+
+		//TODO we should put in logic to determine if the soldier we create should be a fighter or a defender. 
+
+		if(danger){
+			//TODO Fight logic 
+			if(!rc.hasAttacked()){
+				attackClosestEnemy();
+
+			}
+		}
+		else{	
+			if(!Globals.initialEnemyArchonLocatonsChecked & !onMission){
+				scoutInitialEnemyArchonLocations();
+			}
+			
+			footSoldierMovement();
+		
+		}
+	}	
+
+
+	
 	private static void footSoldierMovement() {
 		// TODO Auto-generated method stub
 
 	}
+	
+	
+	
 
 	/**
 	 * This figures out an initial Enemy Archon Location to go to if they haven't been checked yet. If it finds one,

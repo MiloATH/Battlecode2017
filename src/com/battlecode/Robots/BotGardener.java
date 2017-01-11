@@ -1,6 +1,7 @@
 package com.battlecode.Robots;
 
 import com.battlecode.Helpers.CreationStatus;
+import com.battlecode.Helpers.RobotPersonality;
 
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
@@ -19,35 +20,61 @@ public class BotGardener extends Globals {
 	static Direction movement, aggressiveDeploy, defensiveDeploy, plantDir;
 	static CreationStatus currentlyMade;
 	static boolean plantTree, deploySold, deployTank, deployLumberJack, deployScout;
+	public RobotPersonality myPersonality;
 
-
-	public static void runBotGardener() {
+	public  void runBotGardener() {
 		try{
-			updateLocalEnvironment();
-			
-			if(danger){
-				evasiveMovement();
+			switch(myPersonality){
+			case PLANTER:
+				actAsPlanter();
+				break;
+			case DEPLOYER:
+				actAsDeployer();
+			default:
+				actAsDeployer();
+				break;
 			}
-			else{
-				normalMovement();
-				if(!planter){
-					createBots();
-				}
-				else{
-					if(!treesAreNearby){
-						plantTrees();
-					}
-					else{
-						maintainTrees();
-					}
-				}
-			}
+
 		}catch (Exception e) {
 			System.out.println("Gardner Exception");
 			e.printStackTrace();
 		}
 	}
 
+
+	private void actAsDeployer() throws GameActionException {
+		updateLocalEnvironment();
+
+		if(danger){
+			evasiveMovement();
+		}
+		else{
+			normalMovement();
+			if(!planter){
+				createBots();
+			}
+		}
+	}
+
+
+	private void actAsPlanter() throws GameActionException{
+		updateLocalEnvironment();
+
+		if(danger){
+			evasiveMovement();
+		}
+		else{
+			normalMovement();
+
+			if(!treesAreNearby){
+				plantTrees();
+			}
+			else{
+				maintainTrees();
+
+			}
+		}
+	}
 
 
 	/**
@@ -56,7 +83,7 @@ public class BotGardener extends Globals {
 
 	private static void maintainTrees() {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 
@@ -119,7 +146,7 @@ public class BotGardener extends Globals {
 		//TODO we have to come up with logic that the gardener should take to plant trees.
 	}
 
-	
+
 
 	/**
 	 * Thought process for a gardener to create Robots.
