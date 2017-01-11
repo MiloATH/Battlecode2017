@@ -9,6 +9,7 @@ public class BotArchon extends Globals {
 	static MapLocation archonLoc;
 	static Direction movement;
 	static boolean danger;
+	static RobotInfo[] enemyRobots;
 
 	public static void runArchon() {
 
@@ -20,12 +21,12 @@ public class BotArchon extends Globals {
 
 				//Testing if it's in Danger
 
-				visibleEnemies = rc.senseNearbyRobots(10, enemy);
+				enemyRobots = rc.senseNearbyRobots(10, friendly.opponent());
 
-				if(visibleEnemies.length > 0){
+				if(enemyRobots.length > 0){
 					danger = true; //TODO could be cost inefficient to be doing this. 
 				}
-				else if (visibleEnemies.length == 0){
+				else if (enemyRobots.length == 0){
 					danger = false;
 				}
 
@@ -48,16 +49,16 @@ public class BotArchon extends Globals {
 						//TODO setup algorithm, right now we'll just set setup to be true.
 						setUp = true;
 					}
-					if(setUp){
+					if(setUp == true){
 						movement = RobotPlayer.randomDirection();
-                        RobotPlayer.tryMove(movement);
-                        if(rc.canHireGardener(movement.opposite()) && Math.random() < .01){
-							rc.hireGardener(movement.opposite());
+
+						if(rc.canHireGardener(movement) && Math.random() < .01){
+							rc.hireGardener(movement);
 						}
 
 					}
 
-
+					RobotPlayer.tryMove(movement);
 
 
 
@@ -74,7 +75,7 @@ public class BotArchon extends Globals {
 	}
 
 		private static Direction getEvadeDir() {
-			MapLocation nearestEnemyLocation = visibleEnemies[0].location; 
+			MapLocation nearestEnemyLocation = enemyRobots[0].location; 
 			return (nearestEnemyLocation.directionTo(archonLoc)).opposite();
 
 			//TODO directionTo is rather expensive, figure out an algorithm that may be cheaper. 
