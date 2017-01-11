@@ -12,7 +12,6 @@ public class BotArchon extends Globals {
 	static RobotInfo[] enemyRobots;
 
 	public static void runArchon() {
-		System.out.println("I'm an archon!");
 
 		// The code you want your robot to perform every round should be in this loop
 		while (true) {
@@ -31,7 +30,7 @@ public class BotArchon extends Globals {
 					danger = false;
 				}
 
-				if(danger = true){
+				if(danger){
 					archonLoc = rc.getLocation();
 					broadcast();
 					Direction dir = getEvadeDir();

@@ -26,7 +26,7 @@ public class BotTank extends Globals {
 			}
 
 			else{
-				//TODO MotionLogic to find fight if fighter, defend if defender.
+				//TODO MotionLogic to ffind fight if fighter, defend if defender.
 			}
 
 		}catch (Exception e) {
