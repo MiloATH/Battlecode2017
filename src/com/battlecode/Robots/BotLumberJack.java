@@ -18,7 +18,7 @@ public class BotLumberJack extends Globals {
 
 	static RobotInfo[] enemyRobots;
 	static Direction movement;
-	public static RobotPersonality myPersonality;
+	public  RobotPersonality myPersonality;
 
 
 	public void runLumberJack() {
@@ -145,11 +145,5 @@ public class BotLumberJack extends Globals {
 		return toReturn;
 	}
 
-	public static RobotPersonality getMyPersonality() {
-		return myPersonality;
-	}
 
-	public static void setMyPersonality(RobotPersonality myPersonality) {
-		BotLumberJack.myPersonality = myPersonality;
-	}
 }
