@@ -20,9 +20,9 @@ public class BotGardener extends Globals {
 	static Direction movement, aggressiveDeploy, defensiveDeploy, plantDir;
 	static CreationStatus currentlyMade;
 	static boolean plantTree, deploySold, deployTank, deployLumberJack, deployScout;
-	public RobotPersonality myPersonality;
+	public static RobotPersonality myPersonality;
 
-	public  void runBotGardener() {
+	public static void loop() {
 		try{
 			switch(myPersonality){
 			case PLANTER:
@@ -42,7 +42,7 @@ public class BotGardener extends Globals {
 	}
 
 
-	private void actAsDeployer() throws GameActionException {
+	private static void actAsDeployer() throws GameActionException {
 		updateLocalEnvironment();
 
 		if(danger){
@@ -57,7 +57,7 @@ public class BotGardener extends Globals {
 	}
 
 
-	private void actAsPlanter() throws GameActionException{
+	private static void actAsPlanter() throws GameActionException{
 		updateLocalEnvironment();
 
 		if(danger){

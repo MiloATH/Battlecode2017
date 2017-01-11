@@ -18,10 +18,10 @@ public class BotLumberJack extends Globals {
 
 	static RobotInfo[] enemyRobots;
 	static Direction movement;
-	public  RobotPersonality myPersonality;
+	public static RobotPersonality myPersonality;
 
 
-	public void runLumberJack() {
+	public static void loop() {
 		try{
 
 			switch (myPersonality){
@@ -48,7 +48,7 @@ public class BotLumberJack extends Globals {
 
 
 
-	private void behaveAsKamikazee() throws GameActionException {
+	private static void behaveAsKamikazee() throws GameActionException {
 		setDangerStatus();
 		if(danger){
 			
@@ -72,7 +72,7 @@ public class BotLumberJack extends Globals {
 
 
 
-	private void behaveAsChopper() {
+	private static void behaveAsChopper() {
 		setDangerStatus();
 
 		if(danger){
@@ -87,7 +87,7 @@ public class BotLumberJack extends Globals {
 
 
 
-	private void behaveAsNormalLumberJack() {
+	private static void behaveAsNormalLumberJack() {
 		setDangerStatus();
 
 		if(danger){
@@ -100,7 +100,7 @@ public class BotLumberJack extends Globals {
 
 
 
-	private void setDangerStatus(){
+	private static void setDangerStatus(){
 		enemyRobots = rc.senseNearbyRobots(-1, friendly.opponent());
 
 		if(enemyRobots.length > 0){

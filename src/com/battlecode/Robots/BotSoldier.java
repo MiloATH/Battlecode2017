@@ -16,9 +16,9 @@ public class BotSoldier extends Globals {
 	static RobotInfo[] enemyRobots;
 	static MapLocation currentLocation;
 	static Direction movement;
-	public RobotPersonality myPersonality;
+	public static RobotPersonality myPersonality;
 
-	public void runSoldier() {
+	public static void loop() {
 
 		try{
 			
@@ -43,7 +43,7 @@ public class BotSoldier extends Globals {
 
 	}
 
-	private void actAsAttacker() throws GameActionException {
+	private static void actAsAttacker() throws GameActionException {
 
 		updateLocalEnvironment();
 
@@ -67,7 +67,7 @@ public class BotSoldier extends Globals {
 	}	
 
 	
-	private void actAsDefender() throws GameActionException {
+	private static void actAsDefender() throws GameActionException {
 
 		updateLocalEnvironment();
 

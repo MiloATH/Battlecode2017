@@ -3,7 +3,8 @@ package com.battlecode.Robots;
 import java.awt.Robot;
 
 import battlecode.common.*;
-import examplefuncsplayer.RobotPlayer;
+//RobotPlayer should reference Robots/RobotPlayer.
+//import examplefuncsplayer.RobotPlayer;
 
 public class BotArchon extends Globals {
 
@@ -13,7 +14,7 @@ public class BotArchon extends Globals {
 	static boolean danger;
 	static RobotInfo[] enemyRobots;
 
-	public static void runArchon() {
+	public static void loop() {
 
 		while (true) {
 			// Try/catch blocks stop unhandled exceptions, which cause your robot to explode

@@ -8,7 +8,7 @@ public class BotScout extends Globals {
 	static RobotInfo[] enemyRobots;
 	static Direction movement;
 
-	public static void runScout() {
+	public static void loop() {
 
 		try{
 

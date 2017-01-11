@@ -9,9 +9,9 @@ public class BotTank extends Globals {
 	static boolean danger;
 	static RobotInfo[] enemyRobots;
 	static Direction movement;
-	public RobotPersonality myPersonality;
+	public static RobotPersonality myPersonality;
     
-	public void loop() {
+	public static void loop() {
      
 
 		try{
@@ -35,7 +35,7 @@ public class BotTank extends Globals {
 		
 	}
 
-	private void actAsKiller() {
+	private static void actAsKiller() {
 		
 		detectNearbyEnemies();
 		if(danger){
@@ -47,7 +47,7 @@ public class BotTank extends Globals {
 		}		
 	}
 
-	private void actAsPlower() {
+	private static void actAsPlower() {
 		
 		detectNearbyEnemies();
 
@@ -60,7 +60,7 @@ public class BotTank extends Globals {
 		}	
 	}
 	
-	private void detectNearbyEnemies(){
+	private static void detectNearbyEnemies(){
 		enemyRobots = rc.senseNearbyRobots(-1, friendly.opponent());
 
 		if(enemyRobots.length > 0){
