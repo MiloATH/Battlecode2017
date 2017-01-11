@@ -27,15 +27,19 @@ public class BotSoldier extends Globals {
 				//TODO Fight logic 
 				if(!rc.hasAttacked()){
 					attackClosestEnemy();
+
 				}
 			}
 			else{	
 				if(!Globals.initialEnemyArchonLocatonsChecked & !onMission){
 					scoutInitialEnemyArchonLocations();
 				}
+				
 				footSoldierMovement();
+			
 			}
 		}
+		
 		catch (Exception e) {
 			System.out.println("LumberJack Exception");
 			e.printStackTrace();

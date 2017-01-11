@@ -49,7 +49,6 @@ public class BotGardener extends Globals {
 	}
 
 
-
 	/**
 	 * Method to take care of trees so they don't die on us. 
 	 */

@@ -26,7 +26,6 @@ public class BotArchon extends Globals {
 					Globals.setSetUpInitialGlobalInfo(true);
 				}
 				else{
-					
 					//Testing if it's in Danger
 					updateIfInDanger();
 					
