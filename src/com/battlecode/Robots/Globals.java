@@ -37,6 +37,8 @@ public class Globals {
 
     public static double[] circlePlantInts = {0.4, 0.8, 1.2, 1.6, 2};
 
+    public static float mapSize;
+
     public static void init(RobotController theRC) {
         rc = theRC;
         friendly = rc.getTeam();
