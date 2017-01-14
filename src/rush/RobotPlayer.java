@@ -4,7 +4,7 @@ import battlecode.common.*;
 
 import java.util.*;
 
-public strictfp class RobotPlayer {
+public strictfp class RobotPlayer extends Globals {
     static RobotController rc;
     static Random myRand;
     @SuppressWarnings("unused")
@@ -153,7 +153,7 @@ public strictfp class RobotPlayer {
                 }
 
                 //Then wander
-                wander();
+                retreat();
                 Clock.yield();
             } catch (Exception e) {
                 e.printStackTrace();
@@ -207,7 +207,7 @@ public strictfp class RobotPlayer {
 
         // The code you want your robot to perform every round should be in this loop
         while (true) {
-            
+
             // Try/catch blocks stop unhandled exceptions, which cause your robot to explode
             try {
                 victoryPointsEndgameCheck();
@@ -460,6 +460,12 @@ public strictfp class RobotPlayer {
         MapLocation rightGoal = rc.getLocation().add(towards.rotateRightDegrees(90), rc.getType().bodyRadius);
 
         return (tryMove(towards.rotateRightDegrees(90)) || tryMove(towards.rotateLeftDegrees(90)));
+    }
+
+    static void retreat() throws GameActionException {
+        if(rc.canMove(awayFromEnemy)) {
+            rc.move(awayFromEnemy);
+        }
     }
 
     static void dodge() throws GameActionException {
