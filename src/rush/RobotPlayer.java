@@ -33,6 +33,10 @@ public strictfp class RobotPlayer extends Globals {
     //3:Soldier
     static int[] build = {1, 0, 1, 0, 0, 1, 0, 0, 3, 0, 0, 2, 0, 0, 3, 0, 2, 3, 3};
 
+    static TreeInfo[] senseNearbyTrees;
+    static float acceptableMissingTreeHealth = 35;
+    static int treeMovingTo;
+
     public static void run(RobotController rc) throws GameActionException {
         // This is the RobotController object. You use it to perform actions from this robot,
         // and to get information on its current status.
@@ -150,12 +154,36 @@ public strictfp class RobotPlayer extends Globals {
                 //now try to water trees
                 tryToWater();
                 Clock.yield();
+
+
+
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
     }
 
+<<<<<<< Updated upstream
+=======
+    static void startForesting() throws GameActionException {
+        senseNearbyTrees = rc.senseNearbyTrees(2, friendly);
+        if(senseNearbyTrees.length == 0 && rc.canPlantTree(towardsEnemy)) {
+            rc.plantTree(towardsEnemy);
+        } else {
+            for(int i = 0; i<senseNearbyTrees.length; i++) {
+                if(senseNearbyTrees[i].getHealth()< acceptableMissingTreeHealth) {
+
+                }
+            }
+            if (rc.canMove(towardsEnemy)) {
+                rc.move(towardsEnemy);
+            }
+        }
+    }
+
+    static void runSoldier() throws GameActionException {
+        Team enemy = rc.getTeam().opponent();
+>>>>>>> Stashed changes
 
 
     public static void tryToShake(TreeInfo t) throws GameActionException {
