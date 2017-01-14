@@ -1,14 +1,6 @@
 package com.battlecode.Robots;
 
-import java.util.HashMap;
-
-import com.battlecode.Helpers.RobotPersonality;
-
-import battlecode.common.Direction;
-import battlecode.common.GameActionException;
-import battlecode.common.MapLocation;
-import battlecode.common.RobotInfo;
-
+import battlecode.common.*;
 
 public class BotScout extends Globals {
 
@@ -16,10 +8,9 @@ public class BotScout extends Globals {
 	static RobotInfo[] enemyRobots;
 	static Direction movement;
 	static float foundEast;
-	static float mapSize;
 
 
-	public static void loop() {
+	public static void runScout() {
 
 		try{
 
@@ -36,7 +27,7 @@ public class BotScout extends Globals {
 				//TODO Fight logic for lumberJacks
 			}
 
-			/*else{
+			else{
 				if(mapSize == -1) {
 					mapSize = 0;
 					do {
@@ -50,7 +41,7 @@ public class BotScout extends Globals {
 						mapSize = foundEast - rc.getLocation().x;
 					} while (mapSize <= 0);
 				}
-			}*/
+			}
 
 		}catch (Exception e) {
 			System.out.println("Scout Exception");
