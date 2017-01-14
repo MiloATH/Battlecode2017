@@ -75,8 +75,7 @@ public strictfp class RobotPlayer extends rush.Globals {
                 case TANK:
                     runTank();
             }
-        }
-        catch(Exception e){
+        } catch (Exception e) {
             System.out.println("EXCEPTION IN RUN()");
             e.printStackTrace();
         }
@@ -167,7 +166,6 @@ public strictfp class RobotPlayer extends rush.Globals {
                 Clock.yield();
 
 
-
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -186,13 +184,13 @@ public strictfp class RobotPlayer extends rush.Globals {
 
         senseNearbyTrees = rc.senseNearbyTrees(2, friendly);
         senseAllTrees = rc.senseNearbyTrees(6, friendly);
-        if(tryToWater() == treeMovingTo) {
+        if (tryToWater() == treeMovingTo) {
             targetCurrentHealth = 1000;
         }
-        if(senseNearbyTrees.length == 0 && rc.canPlantTree(towardsEnemy)) {
+        if (senseNearbyTrees.length == 0 && rc.canPlantTree(towardsEnemy)) {
             rc.plantTree(awayFromEnemy);
         }
-        if(senseAllTrees.length != 0 && targetCurrentHealth == 1000) {
+        if (senseAllTrees.length != 0 && targetCurrentHealth == 1000) {
             for (int i = 0; i <= senseNearbyTrees.length; i++) {
                 float checkedHealth = senseNearbyTrees[i].getHealth();
                 if (checkedHealth < acceptableMissingTreeHealth && checkedHealth < targetCurrentHealth) {
@@ -213,10 +211,6 @@ public strictfp class RobotPlayer extends rush.Globals {
             rc.move(directionToTarget.rotateRightDegrees(90));
         }
         Clock.yield();
-    }
-
-    static void runSoldier() throws GameActionException {
-        Team enemy = rc.getTeam().opponent();
     }
 
     public static void tryToShake(TreeInfo t) throws GameActionException {
@@ -277,13 +271,12 @@ public strictfp class RobotPlayer extends rush.Globals {
 
     public static int tryToWater() throws GameActionException {
         if (rc.canWater()) {
-            TreeInfo[] nearbyTrees = rc.senseNearbyTrees(1);
+            TreeInfo[] nearbyTrees = rc.senseNearbyTrees();
             for (int i = 0; i < nearbyTrees.length; i++)
-                if (nearbyTrees[i].getHealth() < acceptableMissingTreeHealth) {
-                    if (rc.canWater(nearbyTrees[i].getID())) {
-                        rc.water(nearbyTrees[i].getID());
-                        return nearbyTrees[i].getID();
-                    }
+                if (nearbyTrees[i].getHealth() < GameConstants.BULLET_TREE_MAX_HEALTH - GameConstants.WATER_HEALTH_REGEN_RATE
+                        && rc.canWater(nearbyTrees[i].getID())) {
+                    rc.water(nearbyTrees[i].getID());
+                    return nearbyTrees[i].getID();
                 }
         }
         return -1;
@@ -411,7 +404,7 @@ public strictfp class RobotPlayer extends rush.Globals {
     }
 
     static void retreat() throws GameActionException {
-        if(awayFromEnemy != null && !rc.hasMoved() && rc.canMove(awayFromEnemy)) {
+        if (awayFromEnemy != null && !rc.hasMoved() && rc.canMove(awayFromEnemy)) {
             rc.move(awayFromEnemy);
         }
     }
@@ -453,7 +446,7 @@ public strictfp class RobotPlayer extends rush.Globals {
         }
     }
 
-    public static void nearbyEnemy(){
+    public static void nearbyEnemy() {
 
     }
 }

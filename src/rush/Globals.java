@@ -45,7 +45,7 @@ public class Globals {
         friendly = rc.getTeam();
         enemy = friendly.opponent();
 
-        System.out.println(numberOfInitialArchon + "Initial archons");
+        System.out.println(numberOfInitialArchon + " Initial archons");
         numberOfInitialArchon =1;//TODO
         centerOfFriendlyInitialArchons = new MapLocation(0,0);
         centerOfEnemyInitialArchons = new MapLocation(0,0);
@@ -53,7 +53,7 @@ public class Globals {
         centerOfEnemyInitialArchons = ArchonCenter(1.0 / (double)numberOfInitialArchon, centerOfEnemyInitialArchons);
         //System.out.println(centerOfFriendlyInitialArchons.x);
         //System.out.println(centerOfEnemyInitialArchons.directionTo(centerOfFriendlyInitialArchons).radians);
-        awayFromEnemy = new Direction(0);//centerOfEnemyInitialArchons.directionTo(centerOfFriendlyInitialArchons);
+        awayFromEnemy = Direction.getWest();//centerOfEnemyInitialArchons.directionTo(centerOfFriendlyInitialArchons);
         //System.out.println(awayFromEnemy);
         towardsEnemy = awayFromEnemy.opposite();
     }
