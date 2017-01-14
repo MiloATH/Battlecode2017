@@ -1,8 +1,6 @@
 package rush;
 
 import battlecode.common.*;
-import com.battlecode.Robots.BotLumberJack;
-import rush.*;
 import java.util.*;
 
 public strictfp class RobotPlayer extends Globals {
