@@ -10,7 +10,7 @@ public class BotScout extends Globals {
 	static float foundEast;
 
 
-	public static void runScout() {
+	public static void loop() {
 
 		try{
 
@@ -27,7 +27,7 @@ public class BotScout extends Globals {
 				//TODO Fight logic for lumberJacks
 			}
 
-			else{
+			/*else{
 				if(mapSize == -1) {
 					mapSize = 0;
 					do {
@@ -41,7 +41,7 @@ public class BotScout extends Globals {
 						mapSize = foundEast - rc.getLocation().x;
 					} while (mapSize <= 0);
 				}
-			}
+			}*/
 
 		}catch (Exception e) {
 			System.out.println("Scout Exception");
