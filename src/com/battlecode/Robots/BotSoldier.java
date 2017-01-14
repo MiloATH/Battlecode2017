@@ -131,10 +131,10 @@ public class BotSoldier extends Globals {
 		MapLocation closestEnemy = enemyRobots[0].location;
 		Direction enemyDirection = currentLocation.directionTo(closestEnemy);
 		if (!rc.hasAttacked()){
-			if(rc.canFirePentadShot()){
+			if(rc.canFirePentadShot() && enemyRobots.length > 3){
 				rc.firePentadShot(enemyDirection);
 			}
-			else if(rc.canFireTriadShot()){
+			else if(rc.canFireTriadShot() && enemyRobots.length > 1){
 				rc.fireTriadShot(enemyDirection);
 			}
 			else if(rc.canFireSingleShot()){
