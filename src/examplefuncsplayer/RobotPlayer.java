@@ -23,7 +23,7 @@ public strictfp class RobotPlayer {
         // You can add the missing ones or rewrite this into your own control structure.
         switch (rc.getType()) {
             case ARCHON:
-                BotArchon.runArchon();
+                runArchon();//BotArchon.runArchon();//We should probably keep the projects seperate.
                 break;
             case GARDENER:
                 runGardener();

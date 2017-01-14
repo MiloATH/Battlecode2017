@@ -1,13 +1,8 @@
 package com.battlecode.Robots;
 
+import battlecode.common.*;
 import com.battlecode.Helpers.CreationStatus;
 import com.battlecode.Helpers.RobotPersonality;
-
-import battlecode.common.Direction;
-import battlecode.common.GameActionException;
-import battlecode.common.RobotInfo;
-import battlecode.common.RobotType;
-import battlecode.common.TreeInfo;
 
 public class BotGardener extends Globals {
 
@@ -20,9 +15,16 @@ public class BotGardener extends Globals {
 	static Direction movement, aggressiveDeploy, defensiveDeploy, plantDir;
 	static CreationStatus currentlyMade;
 	static boolean plantTree, deploySold, deployTank, deployLumberJack, deployScout;
-	public RobotPersonality myPersonality;
+	public static RobotPersonality myPersonality;
+	static boolean canMoveAway = true;
+	static boolean hasFarm;
 
-	public  void runBotGardener() {
+	static double tempTreeHolder = 0.4;
+	static float treeMultiplier = (float) tempTreeHolder;
+
+    static int movesFromEdge = 0;
+
+	public static void loop() {
 		try{
 			switch(myPersonality){
 			case PLANTER:
@@ -31,18 +33,29 @@ public class BotGardener extends Globals {
 			case DEPLOYER:
 				actAsDeployer();
 			default:
-				actAsDeployer();
+				getRole();
 				break;
 			}
 
 		}catch (Exception e) {
-			System.out.println("Gardner Exception");
+			System.out.println("Gardener Exception");
 			e.printStackTrace();
 		}
 	}
 
+    private static void getRole() throws GameActionException {
+	   int i; //TODO Fix this inefficient hack of a coding job
+	    for(i=0; i<=rc.senseNearbyRobots().length; i++) {
+            if(rc.getType() == RobotType.GARDENER) {
+                myPersonality = RobotPersonality.PLANTER;
+            } else {
+                myPersonality = RobotPersonality.DEPLOYER;
+            }
+        }
 
-	private void actAsDeployer() throws GameActionException {
+    }
+
+	private static void actAsDeployer() throws GameActionException {
 		updateLocalEnvironment();
 
 		if(danger){
@@ -57,7 +70,7 @@ public class BotGardener extends Globals {
 	}
 
 
-	private void actAsPlanter() throws GameActionException{
+	private static void actAsPlanter() throws GameActionException{
 		updateLocalEnvironment();
 
 		if(danger){
@@ -141,9 +154,20 @@ public class BotGardener extends Globals {
 	 * Thought process for a gardener to plant trees.
 	 */
 
-	public static void plantTrees() {
+	public static void planterMovement() throws GameActionException {
+        if(!hasFarm) {
+            if(rc.canMove(awayFromEnemy) && canMoveAway){
+                rc.move(awayFromEnemy);
+            } else {
+                canMoveAway = false;
 
-		//TODO we have to come up with logic that the gardener should take to plant trees.
+            }
+        }
+
+    }
+
+	public static void plantTrees() throws GameActionException {
+
 	}
 
 

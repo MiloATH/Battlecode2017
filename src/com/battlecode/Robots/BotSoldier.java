@@ -16,9 +16,15 @@ public class BotSoldier extends Globals {
 	static RobotInfo[] enemyRobots;
 	static MapLocation currentLocation;
 	static Direction movement;
+<<<<<<< HEAD
 	public RobotPersonality myPersonality;
 	public static int[] possibleDirections = new int[] {1,-1,2,-2,3,-3,4,-4,5,-5,6};
 	public void runSoldier() {
+=======
+	public static RobotPersonality myPersonality;
+
+	public static void loop() {
+>>>>>>> master
 
 		try{
 
@@ -43,7 +49,7 @@ public class BotSoldier extends Globals {
 
 	}
 
-	private void actAsAttacker() throws GameActionException {
+	private static void actAsAttacker() throws GameActionException {
 
 		updateLocalEnvironment();
 
@@ -66,8 +72,13 @@ public class BotSoldier extends Globals {
 		}
 	}	
 
+<<<<<<< HEAD
 
 	private void actAsDefender() throws GameActionException {
+=======
+	
+	private static void actAsDefender() throws GameActionException {
+>>>>>>> master
 
 		updateLocalEnvironment();
 
@@ -151,10 +162,10 @@ public class BotSoldier extends Globals {
 		MapLocation closestEnemy = enemyRobots[0].location;
 		Direction enemyDirection = currentLocation.directionTo(closestEnemy);
 		if (!rc.hasAttacked()){
-			if(rc.canFirePentadShot()){
+			if(rc.canFirePentadShot() && enemyRobots.length > 3){
 				rc.firePentadShot(enemyDirection);
 			}
-			else if(rc.canFireTriadShot()){
+			else if(rc.canFireTriadShot() && enemyRobots.length > 1){
 				rc.fireTriadShot(enemyDirection);
 			}
 			else if(rc.canFireSingleShot()){
