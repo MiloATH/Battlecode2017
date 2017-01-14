@@ -21,7 +21,6 @@ public class RobotPlayer extends Globals {
                 break;
 
             case SCOUT:
-                BotScout.loop();
                 break;
 
             case SOLDIER:

@@ -3,7 +3,7 @@ package rush;
 import battlecode.common.*;
 import java.util.*;
 
-public strictfp class RobotPlayer extends Globals {
+public strictfp class RobotPlayer extends rush.Globals {
     static RobotController rc;
     static Random myRand;
     @SuppressWarnings("unused")
@@ -34,8 +34,12 @@ public strictfp class RobotPlayer extends Globals {
     static int[] build = {1, 0, 1, 0, 0, 1, 0, 0, 3, 0, 0, 2, 0, 0, 3, 0, 2, 3, 3};
 
     static TreeInfo[] senseNearbyTrees;
+    static TreeInfo[] senseAllTrees;
     static float acceptableMissingTreeHealth = 35;
     static int treeMovingTo;
+    static float distanceToTarget = 100000;
+    static float targetCurrentHealth = 1000;
+    static Direction directionToTarget;
 
     public static void run(RobotController rc) throws GameActionException {
         // This is the RobotController object. You use it to perform actions from this robot,
@@ -163,27 +167,42 @@ public strictfp class RobotPlayer extends Globals {
         }
     }
 
-<<<<<<< Updated upstream
-=======
     static void startForesting() throws GameActionException {
-        senseNearbyTrees = rc.senseNearbyTrees(2, friendly);
-        if(senseNearbyTrees.length == 0 && rc.canPlantTree(towardsEnemy)) {
-            rc.plantTree(towardsEnemy);
-        } else {
-            for(int i = 0; i<senseNearbyTrees.length; i++) {
-                if(senseNearbyTrees[i].getHealth()< acceptableMissingTreeHealth) {
 
+        senseNearbyTrees = rc.senseNearbyTrees(2, friendly);
+        senseAllTrees = rc.senseNearbyTrees(6, friendly);
+        if(tryToWater() == treeMovingTo) {
+            targetCurrentHealth = 1000;
+        }
+        if(senseNearbyTrees.length == 0 && rc.canPlantTree(towardsEnemy)) {
+            rc.plantTree(awayFromEnemy);
+        }
+        if(senseAllTrees.length != 0 && targetCurrentHealth == 1000) {
+            for (int i = 0; i <= senseNearbyTrees.length; i++) {
+                float checkedHealth = senseNearbyTrees[i].getHealth();
+                if (checkedHealth < acceptableMissingTreeHealth && checkedHealth < targetCurrentHealth) {
+                    targetCurrentHealth = senseNearbyTrees[i].getHealth();
+                    treeMovingTo = senseNearbyTrees[i].getID();
                 }
             }
-            if (rc.canMove(towardsEnemy)) {
-                rc.move(towardsEnemy);
-            }
         }
+
+        if (senseAllTrees != null) {
+            directionToTarget = rc.getLocation().directionTo(senseNearbyTrees[treeMovingTo].getLocation());
+        }
+        if (rc.canMove(directionToTarget)) {
+            rc.move(directionToTarget);
+        } else if (rc.canMove(directionToTarget.rotateLeftDegrees(45))) {
+            rc.move(directionToTarget.rotateLeftDegrees(45));
+        } else if (rc.canMove(directionToTarget.rotateRightDegrees(90))) {
+            rc.move(directionToTarget.rotateRightDegrees(90));
+        }
+        Clock.yield();
     }
 
     static void runSoldier() throws GameActionException {
         Team enemy = rc.getTeam().opponent();
->>>>>>> Stashed changes
+    }
 
 
     public static void tryToShake(TreeInfo t) throws GameActionException {
@@ -242,17 +261,18 @@ public strictfp class RobotPlayer extends Globals {
         }
     }
 
-    public static void tryToWater() throws GameActionException {
+    public static int tryToWater() throws GameActionException {
         if (rc.canWater()) {
-            TreeInfo[] nearbyTrees = rc.senseNearbyTrees();
+            TreeInfo[] nearbyTrees = rc.senseNearbyTrees(1);
             for (int i = 0; i < nearbyTrees.length; i++)
-                if (nearbyTrees[i].getHealth() < GameConstants.BULLET_TREE_MAX_HEALTH - GameConstants.WATER_HEALTH_REGEN_RATE) {
-                    if (nearbyTrees[i].getTeam() == rc.getTeam() && rc.canWater(nearbyTrees[i].getID())) {
+                if (nearbyTrees[i].getHealth() < acceptableMissingTreeHealth) {
+                    if (rc.canWater(nearbyTrees[i].getID())) {
                         rc.water(nearbyTrees[i].getID());
-                        break;
+                        return nearbyTrees[i].getID();
                     }
                 }
         }
+        return -1;
     }
 
     public static int tryToBuild(RobotType t) throws GameActionException {
@@ -377,7 +397,7 @@ public strictfp class RobotPlayer extends Globals {
     }
 
     static void retreat() throws GameActionException {
-        if(awayFromEnemy!= null && !rc.hasMoved() && rc.canMove(awayFromEnemy)) {
+        if(awayFromEnemy != null && !rc.hasMoved() && rc.canMove(awayFromEnemy)) {
             rc.move(awayFromEnemy);
         }
     }
