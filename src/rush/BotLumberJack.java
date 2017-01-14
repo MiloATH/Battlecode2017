@@ -20,16 +20,13 @@ public class BotLumberJack extends RobotPlayer {
                     }
                 }
                 TreeInfo[] trees = rc.senseNearbyTrees();
-                //for (TreeInfo t : trees) {
-                    //tryToShake(t);
-                    //System.out.println("Just shaked: " + t.getID());
-                    //if (t.getTeam() != rc.getTeam() && rc.canChop(t.getLocation())) {
-                       // System.out.println("About to chop: "+ t.getLocation().x + ", " + t.getLocation().y);
-                        //rc.chop(t.getLocation());
-                      //  System.out.println("Chopped");
-                      //  break;
-                    //}
-               // }
+                for (TreeInfo t : trees) {
+                    tryToShake(t);
+                    if (t.getTeam() != rc.getTeam() && rc.canChop(t.getLocation())) {
+                        rc.chop(t.getLocation());
+                        break;
+                    }
+                }
                 if (!rc.hasAttacked()) {
                     wander();
                 }
