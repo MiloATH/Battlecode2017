@@ -37,7 +37,7 @@ public strictfp class RobotPlayer extends rush.Globals {
     static TreeInfo[] senseNearbyTrees;
     static TreeInfo[] senseAllTrees;
     static float acceptableMissingTreeHealth = 35;
-    static int treeMovingTo = -1;
+    static int treeMovingTo;
     static float distanceToTarget = 100000;
     static float targetCurrentHealth = 1000;
     static Direction directionToTarget;
@@ -182,47 +182,35 @@ public strictfp class RobotPlayer extends rush.Globals {
 
     static void startForesting() throws GameActionException {
 
-<<<<<<< Updated upstream
         senseNearbyTrees = rc.senseNearbyTrees(2, friendly);
         senseAllTrees = rc.senseNearbyTrees(6, friendly);
         if (tryToWater() == treeMovingTo) {
-=======
-        senseNearbyTrees = rc.senseNearbyTrees(2, friendly); //check if there are trees near
-        senseAllTrees = rc.senseNearbyTrees(6, friendly); //check if I can see tree
-        if(tryToWater() == treeMovingTo) { //did I just water my target?
->>>>>>> Stashed changes
             targetCurrentHealth = 1000;
-            treeMovingTo = -1;
         }
-<<<<<<< Updated upstream
         if (senseNearbyTrees.length == 0 && rc.canPlantTree(towardsEnemy)) {
             rc.plantTree(awayFromEnemy);
         }
         if (senseAllTrees.length != 0 && targetCurrentHealth == 1000) {
             for (int i = 0; i <= senseNearbyTrees.length; i++) {
                 float checkedHealth = senseNearbyTrees[i].getHealth();
-=======
-        if(senseNearbyTrees.length == 0 && rc.canPlantTree(awayFromEnemy)) { //if there's nothing near me, plant a tree
-            rc.plantTree(awayFromEnemy);
-        }
-        if(senseAllTrees.length != 0 && targetCurrentHealth == 1000) {
-            for (int i = 0; i <= senseAllTrees.length; i++) {
-                float checkedHealth = senseAllTrees[i].getHealth();
->>>>>>> Stashed changes
                 if (checkedHealth < acceptableMissingTreeHealth && checkedHealth < targetCurrentHealth) {
                     targetCurrentHealth = senseNearbyTrees[i].getHealth();
                     treeMovingTo = senseNearbyTrees[i].getID();
                 }
             }
         }
-        if(treeMovingTo > 0) {
-            if (tryMove(directionToTarget, 45, 2)) {
-                directionToTarget = rc.getLocation().directionTo(senseNearbyTrees[treeMovingTo].getLocation());
-            }
-            Clock.yield();
-        } else {
-            wander();
+
+        if (senseAllTrees != null) {
+            directionToTarget = rc.getLocation().directionTo(senseNearbyTrees[treeMovingTo].getLocation());
         }
+        if (rc.canMove(directionToTarget)) {
+            rc.move(directionToTarget);
+        } else if (rc.canMove(directionToTarget.rotateLeftDegrees(45))) {
+            rc.move(directionToTarget.rotateLeftDegrees(45));
+        } else if (rc.canMove(directionToTarget.rotateRightDegrees(90))) {
+            rc.move(directionToTarget.rotateRightDegrees(90));
+        }
+        Clock.yield();
     }
 
     public static void tryToShake(TreeInfo t) throws GameActionException {
@@ -233,7 +221,7 @@ public strictfp class RobotPlayer extends rush.Globals {
     }
 
 
-    public static boolean wander(boolean needsToAdvance) throws GameActionException {
+    public static void wander() throws GameActionException {
         try {//TODO. make it better
             if (!rc.hasMoved()) {
                 while (Clock.getBytecodesLeft() > 100) {
@@ -241,26 +229,17 @@ public strictfp class RobotPlayer extends rush.Globals {
                     for (int i = 0; i < 72; i++) {
                         Direction offset = new Direction(goingDir.radians + (float) (leftOrRight * 2 * Math.PI * ((float) i) / 72));
                         if (rc.canMove(offset) && !rc.hasMoved()) {
-                            if(needsToAdvance) {
-                                float n = offset.degreesBetween(awayFromEnemy);
-                                float p = offset.degreesBetween(towardsEnemy);
-
-                                if() {
-                                }
-                            }
                             rc.move(offset);
                             goingDir = offset;
-                            return true;
+                            return;
                         }
                     }
                     goingDir = randomDirection();
                 }
             }
-
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return false;
     }
 
     public static int encodeBroadcastLoc(MapLocation location) {
@@ -292,22 +271,12 @@ public strictfp class RobotPlayer extends rush.Globals {
 
     public static int tryToWater() throws GameActionException {
         if (rc.canWater()) {
-<<<<<<< Updated upstream
             TreeInfo[] nearbyTrees = rc.senseNearbyTrees();
             for (int i = 0; i < nearbyTrees.length; i++)
                 if (nearbyTrees[i].getHealth() < GameConstants.BULLET_TREE_MAX_HEALTH - GameConstants.WATER_HEALTH_REGEN_RATE
                         && rc.canWater(nearbyTrees[i].getID())) {
                     rc.water(nearbyTrees[i].getID());
                     return nearbyTrees[i].getID();
-=======
-            TreeInfo[] nearbyTrees = rc.senseNearbyTrees(2);
-            for (int i = 0; i <= nearbyTrees.length; i++)
-                if (nearbyTrees[i].getHealth() < acceptableMissingTreeHealth) {
-                    if (rc.canWater(nearbyTrees[i].getID())) {
-                        rc.water(nearbyTrees[i].getID());
-                        return nearbyTrees[i].getID();
-                    }
->>>>>>> Stashed changes
                 }
         }
         return -1;

@@ -1,9 +1,0 @@
-diff a/src/rush/RobotPlayer.java b/src/rush/RobotPlayer.java	(rejected hunks)
-@@ -299,6 +299,7 @@
- +                        && rc.canWater(nearbyTrees[i].getID())) {
- +                    rc.water(nearbyTrees[i].getID());
- +                    return nearbyTrees[i].getID();
-++=======
-              TreeInfo[] nearbyTrees = rc.senseNearbyTrees(2);
-              for (int i = 0; i <= nearbyTrees.length; i++)
-                  if (nearbyTrees[i].getHealth() < acceptableMissingTreeHealth) {
