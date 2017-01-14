@@ -16,18 +16,12 @@ public class BotSoldier extends Globals {
 	static RobotInfo[] enemyRobots;
 	static MapLocation currentLocation;
 	static Direction movement;
-<<<<<<< HEAD
-	public RobotPersonality myPersonality;
-	public static int[] possibleDirections = new int[] {1,-1,2,-2,3,-3,4,-4,5,-5,6};
-	public void runSoldier() {
-=======
 	public static RobotPersonality myPersonality;
 
 	public static void loop() {
->>>>>>> master
 
 		try{
-
+			
 			switch(myPersonality){
 			case ATTACKER:
 				actAsAttacker();
@@ -38,10 +32,10 @@ public class BotSoldier extends Globals {
 			default:
 				actAsAttacker();
 				break;
-
+			
 			}
 		}
-
+		
 		catch (Exception e) {
 			System.out.println("LumberJack Exception");
 			e.printStackTrace();
@@ -66,19 +60,14 @@ public class BotSoldier extends Globals {
 			if(!Globals.initialEnemyArchonLocatonsChecked & !onMission){
 				scoutInitialEnemyArchonLocations();
 			}
-
+			
 			footSoldierMovement();
-
+		
 		}
 	}	
 
-<<<<<<< HEAD
-
-	private void actAsDefender() throws GameActionException {
-=======
 	
 	private static void actAsDefender() throws GameActionException {
->>>>>>> master
 
 		updateLocalEnvironment();
 
@@ -95,41 +84,21 @@ public class BotSoldier extends Globals {
 			if(!Globals.initialEnemyArchonLocatonsChecked & !onMission){
 				scoutInitialEnemyArchonLocations();
 			}
-
+			
 			footSoldierMovement();
-
+		
 		}
 	}	
 
 
-
-	private static void footSoldierMovement() throws GameActionException {
-		
-		determineWhereToMove();
-		Direction toMove = movement;
-		
-		if(rc.canMove(toMove)){
-			rc.move(toMove);
-		}
-		else if(!rc.canMove(toMove)){
-			//This is where pathfinding must go
-			
-			for(int i : possibleDirections){
-				Direction candidateDirection = toMove.rotateLeftDegrees(i * 30); 
-				if(rc.canMove(candidateDirection)){
-					rc.move(candidateDirection);
-				}
-			}
-		}
-	}
-
-
-
-
-	private static void determineWhereToMove() {
+	
+	private static void footSoldierMovement() {
 		// TODO Auto-generated method stub
 
 	}
+	
+	
+	
 
 	/**
 	 * This figures out an initial Enemy Archon Location to go to if they haven't been checked yet. If it finds one,
@@ -137,7 +106,7 @@ public class BotSoldier extends Globals {
 	 * @throws GameActionException
 	 */
 	private static void scoutInitialEnemyArchonLocations() throws GameActionException {
-
+		
 		HashMap<MapLocation, Boolean> test = Globals.InitialEnemyArchonLocationStatus;
 		MapLocation[] locations = (MapLocation[]) test.keySet().toArray();
 		for(int i = 0; i <= test.size(); i++){
