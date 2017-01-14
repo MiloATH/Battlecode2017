@@ -119,7 +119,7 @@ public strictfp class RobotPlayer {
                 if (!rc.hasMoved()) {
                     MapLocation loc = decodeBroadcastLoc(rc.readBroadcast(ENEMY_GARDENER_SEEN_CHANNEL));
                     MapLocation me = rc.getLocation();
-                    if (loc != null && loc.x == me.x && loc.y == me.y && !rc.hasAttacked()) {//Enemy was probably destroyed or escaped
+                    if (loc != null && loc.x-me.x<.5 && loc.y-me.y<.5 && !rc.hasAttacked()) {//Enemy was probably destroyed or escaped
                         rc.broadcast(ENEMY_GARDENER_SEEN_CHANNEL, 0);
                         if (rc.getRoundNum() < 200) {
 
