@@ -14,7 +14,7 @@ public class BotSoldier extends RobotPlayer{
             try {
                 victoryPointsEndgameCheck();
                 dodge();
-
+                shakeNeighbors();
                 MapLocation myLocation = rc.getLocation();
 
                 // See if there are any nearby enemy robots

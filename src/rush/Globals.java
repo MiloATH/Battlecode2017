@@ -37,6 +37,7 @@ public class Globals {
     public static RobotInfo[] visibleBullets = null;
     public static RobotInfo[] visibleOnTargetBullets = null;
 
+    public static MapLocation home;
 
     public static int minSquadSize = 5;
 
@@ -44,6 +45,7 @@ public class Globals {
         rc = theRC;
         friendly = rc.getTeam();
         enemy = friendly.opponent();
+        home = rc.getLocation();
 
         System.out.println(numberOfInitialArchon + " Initial archons");
         numberOfInitialArchon =1;//TODO

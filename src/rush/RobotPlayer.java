@@ -17,7 +17,7 @@ public strictfp class RobotPlayer extends rush.Globals {
     static int ENEMY_GARDENER_SEEN_CHANNEL = 100;
 
     // Keep important numbers here
-    static int GARDENER_MAX = 15;
+    static int GARDENER_MAX = 30;
     static int LUMBERJACK_MAX = 30;
     static int SCOUT_MAX = 20;
     static int SURPLUS_BULLETS = 500;
@@ -41,6 +41,8 @@ public strictfp class RobotPlayer extends rush.Globals {
     static float distanceToTarget = 100000;
     static float targetCurrentHealth = 1000;
     static Direction directionToTarget;
+    static int watering = 0;
+    static ArrayList<MapLocation> trees;
 
     public static void run(RobotController rc) throws GameActionException {
         // This is the RobotController object. You use it to perform actions from this robot,
@@ -121,7 +123,7 @@ public strictfp class RobotPlayer extends rush.Globals {
                 }
 
                 //Then wander
-                retreat();
+                //wander();
                 Clock.yield();
             } catch (Exception e) {
                 e.printStackTrace();
@@ -130,6 +132,7 @@ public strictfp class RobotPlayer extends rush.Globals {
     }
 
     static void runGardener() throws GameActionException {
+        trees = new ArrayList<MapLocation>();
         while (true) {
             try {
                 victoryPointsEndgameCheck();
@@ -162,6 +165,7 @@ public strictfp class RobotPlayer extends rush.Globals {
                     }
                 }
                 //now try to water trees
+                nearbyWander();
                 tryToWater();
                 Clock.yield();
 
@@ -242,6 +246,35 @@ public strictfp class RobotPlayer extends rush.Globals {
         }
     }
 
+    public static void nearbyWander() throws GameActionException {
+        try {//TODO. make it better
+            goingDir = randomDirection();
+            if(trees.size()>0) {
+                watering++;
+                MapLocation tree = trees.get(watering%trees.size());
+                if(rc.getLocation().distanceTo(tree) > 7) {
+                    goingDir = rc.getLocation().directionTo(tree);
+                }
+            }
+            if (!rc.hasMoved()) {
+                while (Clock.getBytecodesLeft() > 100) {
+                    int leftOrRight = rand.nextBoolean() ? -1 : 1;
+                    for (int i = 0; i < 72; i++) {
+                        Direction offset = new Direction(goingDir.radians + (float) (leftOrRight * 2 * Math.PI * ((float) i) / 72));
+                        if (rc.canMove(offset) && !rc.hasMoved()) {
+                            rc.move(offset);
+                            goingDir = offset;
+                            return;
+                        }
+                    }
+                    goingDir = randomDirection();
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     public static int encodeBroadcastLoc(MapLocation location) {
         return ((int) location.x) * 100000 + (int) location.y;
     }
@@ -300,7 +333,7 @@ public strictfp class RobotPlayer extends rush.Globals {
         return 0;
     }
 
-    public static Boolean tryToPlant() throws GameActionException {
+    /*public static Boolean tryToPlant() throws GameActionException {
         //try to build gardeners
         //can you build a gardener?
 
@@ -313,8 +346,30 @@ public strictfp class RobotPlayer extends rush.Globals {
             }
         }
         return false;
+    }*/
+
+    public static Boolean tryToPlant() throws GameActionException {
+        //try to build gardeners
+        //can you build a gardener?
+        if (rc.getTeamBullets() > GameConstants.BULLET_TREE_COST) {//have enough bullets. assuming we haven't built already.
+            for (int i = 0; i < 4; i++) {
+                //only plant trees on a sub-grid
+                MapLocation p = rc.getLocation().add(dirList[i], GameConstants.GENERAL_SPAWN_OFFSET + GameConstants.BULLET_TREE_RADIUS + rc.getType().bodyRadius);
+                if (modGood(p.x, 6, 0.2f) && modGood(p.y, 6, 0.2f)) {
+                    if (rc.canPlantTree(dirList[i])) {
+                        rc.plantTree(dirList[i]);
+                        trees.add(p);
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
+    public static boolean modGood(float number, float spacing, float fraction) {
+        return (number % spacing) < spacing * fraction;
+    }
 
     static boolean willCollideWithMe(BulletInfo bullet) {
         MapLocation myLocation = rc.getLocation();
