@@ -45,34 +45,40 @@ public strictfp class RobotPlayer extends rush.Globals {
     public static void run(RobotController rc) throws GameActionException {
         // This is the RobotController object. You use it to perform actions from this robot,
         // and to get information on its current status.
-        RobotPlayer.rc = rc;
-        initDirList();
-        Globals.init(rc);
-        openDirFromList = rc.getID() % 6;
-        roundNum = rc.getRoundNum();
-        rand = new Random(rc.getID());
-        myRand = new Random(rc.getID());
-        goingDir = randomDir();
-        // Here, we've separated the controls into a different method for each RobotType.
-        // You can add the missing ones or rewrite this into your own control structure.
-        switch (rc.getType()) {
-            case ARCHON:
-                runArchon();
-                break;
-            case GARDENER:
-                runGardener();
-                break;
-            case SOLDIER:
-                BotSoldier.loop();
-                break;
-            case LUMBERJACK:
-                BotLumberJack.loop();
-                break;
-            case SCOUT:
-                BotScout.loop();
-                break;
-            case TANK:
-                runTank();
+        try {
+            RobotPlayer.rc = rc;
+            initDirList();
+            Globals.init(rc);
+            openDirFromList = rc.getID() % 6;
+            roundNum = rc.getRoundNum();
+            rand = new Random(rc.getID());
+            myRand = new Random(rc.getID());
+            goingDir = randomDir();
+            // Here, we've separated the controls into a different method for each RobotType.
+            // You can add the missing ones or rewrite this into your own control structure.
+            switch (rc.getType()) {
+                case ARCHON:
+                    runArchon();
+                    break;
+                case GARDENER:
+                    runGardener();
+                    break;
+                case SOLDIER:
+                    BotSoldier.loop();
+                    break;
+                case LUMBERJACK:
+                    BotLumberJack.loop();
+                    break;
+                case SCOUT:
+                    BotScout.loop();
+                    break;
+                case TANK:
+                    runTank();
+            }
+        }
+        catch(Exception e){
+            System.out.println("EXCEPTION IN RUN()");
+            e.printStackTrace();
         }
     }
 
