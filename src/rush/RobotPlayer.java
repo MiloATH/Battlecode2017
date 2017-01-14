@@ -122,6 +122,17 @@ public strictfp class RobotPlayer extends rush.Globals {
                     rc.broadcast(GARDENER_CHANNEL, prevNumGard + tryToBuild(RobotType.GARDENER, RobotType.GARDENER.bulletCost));
                 }
 
+                //Testing for trees if it's the first turn.
+                
+                if(rc.getRoundNum() == 1){
+                	TreeInfo[] nearbyTrees = rc.senseNearbyTrees();
+                	if(nearbyTrees.length >= 10){
+                		rc.broadcast(TREE_CHANNEL, nearbyTrees.length);
+                	}
+                }
+         
+               
+
                 //Then wander
                 //wander();
                 Clock.yield();
