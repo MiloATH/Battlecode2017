@@ -4,7 +4,7 @@ import battlecode.common.*;
 
 import java.util.HashMap;
 
-public class Globals {
+public class Globals{
     public static RobotController rc;
     public static MapLocation here;
     public static Team friendly;
@@ -14,8 +14,10 @@ public class Globals {
     public static MapLocation centerOfAllInitialArchons;
     public static MapLocation centerOfFriendlyInitialArchons;
     public static MapLocation centerOfEnemyInitialArchons;
+    public static MapLocation[] FriendlyInitialArchonLocations;
+    public static MapLocation[] EnemyInitialArchonLocations;
     
-    public static HashMap< MapLocation , Boolean > InitialEnemyArchonLocationStatus;
+    public static HashMap< MapLocation , Boolean > InitialEnemyArchonLocationStatfriendly;
     public static boolean initialEnemyArchonLocatonsChecked;
     
     public static MapLocation[] initialFriendlyArchonLocations;
@@ -45,6 +47,7 @@ public class Globals {
         friendly = rc.getTeam();
         enemy = friendly.opponent();
 
+<<<<<<< Updated upstream
         System.out.println(numberOfInitialArchon + " Initial archons");
         numberOfInitialArchon =1;//TODO
         centerOfFriendlyInitialArchons = new MapLocation(0,0);
@@ -55,6 +58,25 @@ public class Globals {
         //System.out.println(centerOfEnemyInitialArchons.directionTo(centerOfFriendlyInitialArchons).radians);
         awayFromEnemy = Direction.getWest();//centerOfEnemyInitialArchons.directionTo(centerOfFriendlyInitialArchons);
         //System.out.println(awayFromEnemy);
+=======
+        FriendlyInitialArchonLocations = rc.getInitialArchonLocations(friendly);
+        EnemyInitialArchonLocations = rc.getInitialArchonLocations(enemy);
+        numberOfInitialArchon = FriendlyInitialArchonLocations.length;
+        centerOfFriendlyInitialArchons = new MapLocation(0,0);
+        centerOfEnemyInitialArchons = new MapLocation(0,0);
+        centerOfAllInitialArchons = new MapLocation(0,0);
+        for (MapLocation a : FriendlyInitialArchonLocations) {
+            centerOfFriendlyInitialArchons = FastMath.addVec(centerOfFriendlyInitialArchons, a);
+        }
+        for (MapLocation a : EnemyInitialArchonLocations) {
+            centerOfEnemyInitialArchons = FastMath.addVec(centerOfEnemyInitialArchons, a);
+        }
+        centerOfAllInitialArchons = FastMath.addVec(centerOfFriendlyInitialArchons, centerOfEnemyInitialArchons);
+        centerOfFriendlyInitialArchons = FastMath.multiplyVec(1.0 / (double)numberOfInitialArchon, centerOfFriendlyInitialArchons);
+        centerOfEnemyInitialArchons = FastMath.multiplyVec(1.0 / (double)numberOfInitialArchon, centerOfEnemyInitialArchons);
+        centerOfAllInitialArchons = FastMath.multiplyVec(0.5 / (double)numberOfInitialArchon, centerOfAllInitialArchons);
+        awayFromEnemy = centerOfEnemyInitialArchons.directionTo(centerOfFriendlyInitialArchons);
+>>>>>>> Stashed changes
         towardsEnemy = awayFromEnemy.opposite();
     }
 
@@ -62,14 +84,4 @@ public class Globals {
         return new MapLocation((float)f * a.x, (float)f * a.y);
 
     }
-    
-    public static boolean getSetUpInitialGlobalInfo() {
-		return setUpInitialGlobalInformation;
-	}
-
-	public static void setSetUpInitialGlobalInfo(boolean gotNumberOfInitialArchons) {
-		Globals.setUpInitialGlobalInformation = gotNumberOfInitialArchons;
-	}
-
-	
 }
