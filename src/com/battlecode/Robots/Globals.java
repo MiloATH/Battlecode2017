@@ -36,8 +36,6 @@ public class Globals {
     public static RobotInfo[] visibleBullets = null;
     public static RobotInfo[] visibleOnTargetBullets = null;
 
-    public static float[] circlePlantInts = {0.4f, 0.8f, 1.2f, 1.6f, 2};
-
 
     public static int minSquadSize = 5;
 

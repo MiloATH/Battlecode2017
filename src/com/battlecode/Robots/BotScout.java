@@ -1,6 +1,14 @@
 package com.battlecode.Robots;
 
-import battlecode.common.*;
+import java.util.HashMap;
+
+import com.battlecode.Helpers.RobotPersonality;
+
+import battlecode.common.Direction;
+import battlecode.common.GameActionException;
+import battlecode.common.MapLocation;
+import battlecode.common.RobotInfo;
+
 
 public class BotScout extends Globals {
 
@@ -8,6 +16,7 @@ public class BotScout extends Globals {
 	static RobotInfo[] enemyRobots;
 	static Direction movement;
 	static float foundEast;
+	static float mapSize;
 
 
 	public static void loop() {
