@@ -36,7 +36,6 @@ public class Globals {
     public static RobotInfo[] visibleBullets = null;
     public static RobotInfo[] visibleOnTargetBullets = null;
 
-    public static float[] circlePlantInts = {0.4, 0.8, 1.2, 1.6, 2};
 
 
     public static int minSquadSize = 5;
@@ -52,7 +51,7 @@ public class Globals {
         centerOfEnemyInitialArchons = new MapLocation(0,0);
         centerOfFriendlyInitialArchons = ArchonCenter(1.0 / (double)numberOfInitialArchon, centerOfFriendlyInitialArchons);
         centerOfEnemyInitialArchons = ArchonCenter(1.0 / (double)numberOfInitialArchon, centerOfEnemyInitialArchons);
-        awayFromEnemy = centerOfEnemyInitialArchons.directionTo(centerOfFriendlyInitialArchons)
+        awayFromEnemy = centerOfEnemyInitialArchons.directionTo(centerOfFriendlyInitialArchons);
     }
 
     public static MapLocation ArchonCenter(double f, MapLocation a) {

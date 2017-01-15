@@ -10,7 +10,7 @@ public class BotScout extends Globals {
 	static float foundEast;
 
 
-	public static void runScout() {
+	public static void loop() {
 
 		try{
 
@@ -23,10 +23,10 @@ public class BotScout extends Globals {
 				danger = false;
 			}
 
+			float mapSize = 1337;//TODO
 			if(danger){
 				//TODO Fight logic for lumberJacks
 			}
-
 			else{
 				if(mapSize == -1) {
 					mapSize = 0;
