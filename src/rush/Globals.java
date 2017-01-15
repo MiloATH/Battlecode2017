@@ -27,6 +27,7 @@ public class Globals {
     public static boolean scoutedSecondEnemyArchonLocation = false;
     public static boolean scoutedThirdEnemyArchonLocation = false;
     public static Direction awayFromEnemy;
+    public static Direction towardsEnemy;
 
 
 	public static int numberOfInitialArchon;
@@ -52,6 +53,7 @@ public class Globals {
         centerOfFriendlyInitialArchons = ArchonCenter(1.0 / (double)numberOfInitialArchon, centerOfFriendlyInitialArchons);
         centerOfEnemyInitialArchons = ArchonCenter(1.0 / (double)numberOfInitialArchon, centerOfEnemyInitialArchons);
         awayFromEnemy = centerOfEnemyInitialArchons.directionTo(centerOfFriendlyInitialArchons);
+        towardsEnemy = awayFromEnemy.opposite();
     }
 
     public static MapLocation ArchonCenter(double f, MapLocation a) {
