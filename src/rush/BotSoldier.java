@@ -12,8 +12,9 @@ public class BotSoldier extends RobotPlayer{
 
             // Try/catch blocks stop unhandled exceptions, which cause your robot to explode
             try {
-                RobotPlayer.victoryPointsEndgameCheck();
-                RobotPlayer.dodge();
+                victoryPointsEndgameCheck();
+                dodge();
+                shakeNeighbors();
                 MapLocation myLocation = rc.getLocation();
 
                 // See if there are any nearby enemy robots

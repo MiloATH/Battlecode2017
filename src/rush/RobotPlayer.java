@@ -1,6 +1,7 @@
 package rush;
 
 import battlecode.common.*;
+
 import java.util.*;
 
 public strictfp class RobotPlayer extends Globals {
@@ -156,7 +157,13 @@ public strictfp class RobotPlayer extends Globals {
         }
     }
 
-
+    //TODO: Put in loop of each bot
+    public static void shakeNeighbors() throws GameActionException {
+        TreeInfo[] trees = rc.senseNearbyTrees();
+        for (TreeInfo t : trees) {
+            tryToShake(t);
+        }
+    }
 
     public static void tryToShake(TreeInfo t) throws GameActionException {
         MapLocation tree = t.getLocation();
@@ -349,7 +356,7 @@ public strictfp class RobotPlayer extends Globals {
     }
 
     static void retreat() throws GameActionException {
-        if(awayFromEnemy!= null && !rc.hasMoved() && rc.canMove(awayFromEnemy)) {
+        if (awayFromEnemy != null && !rc.hasMoved() && rc.canMove(awayFromEnemy)) {
             rc.move(awayFromEnemy);
         }
     }
@@ -364,10 +371,31 @@ public strictfp class RobotPlayer extends Globals {
 
     }
 
+    public static void navigateTo(MapLocation loc) throws GameActionException {
+        goingDir = rc.getLocation().directionTo(loc);
+        if (!rc.hasMoved()) {
+            while (Clock.getBytecodesLeft() > 100) {
+                int leftOrRight = rand.nextBoolean() ? -1 : 1;
+                for (int i = 0; i < 72; i++) {// 72 since that will check every 5 degrees. 360/72 = 5
+                    Direction offset = new Direction(goingDir.radians + (float) (leftOrRight * 2 * Math.PI * ((float) i) / 72));
+                    if (rc.canMove(offset) && !rc.hasMoved()) {
+                        rc.move(offset);
+                        goingDir = offset;
+                        return;
+                    }
+                }
+                //Blocked off, just try to get out
+                //  |----> TODO: make it better?
+                goingDir = randomDirection();
+            }
+        }
+    }
+
     public static void victoryPointsEndgameCheck() throws GameActionException {
         //If we have 10000 bullets, end the game.
         if (rc.getTeamBullets() >= 10000 || (rc.getRoundLimit() - rc.getRoundNum() < 2)) {
             rc.donate(rc.getTeamBullets());
         }
     }
+
 }
