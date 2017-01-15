@@ -28,6 +28,7 @@ public strictfp class RobotPlayer extends Globals {
     static Random rand;
     static int earlyGame = 300;
     static int roundNum;
+    static int numberOfRoundsAlive;
     //0:Tree
     //1:Scout
     //2:Lumberjack
@@ -40,6 +41,7 @@ public strictfp class RobotPlayer extends Globals {
         RobotPlayer.rc = rc;
         initDirList();
         Globals.init(rc);
+        numberOfRoundsAlive = 0;
         openDirFromList = rc.getID() % 6;
         roundNum = rc.getRoundNum();
         rand = new Random(rc.getID());
@@ -108,7 +110,7 @@ public strictfp class RobotPlayer extends Globals {
                 }
 
                 //Then wander
-                retreat();
+                //retreat();
                 Clock.yield();
             } catch (Exception e) {
                 e.printStackTrace();
@@ -121,6 +123,10 @@ public strictfp class RobotPlayer extends Globals {
             try {
                 victoryPointsEndgameCheck();
                 dodge();
+                int moveUntilRound = 5 * (GARDENER_MAX * rc.getRoundNum() / rc.getRoundLimit() + 1);
+                if (numberOfRoundsAlive < moveUntilRound) {
+                    wander();
+                }
                 int prevLum = rc.readBroadcast(LUMBERJACK_CHANNEL);
                 int prevScouts = rc.readBroadcast(SCOUTS_CHANNEL);
                 int prevTree = rc.readBroadcast(TREE_CHANNEL);
@@ -129,7 +135,7 @@ public strictfp class RobotPlayer extends Globals {
                 if (buildNum < build.length) {
                     switch (build[buildNum]) {
                         case 0://Tree
-                            if (tryToPlant()) {
+                            if (numberOfRoundsAlive > moveUntilRound && tryToPlant()) {//Short circut evaluation. Only plants after moveUntilRound
                                 rc.broadcast(TREE_CHANNEL, prevTree + 1);
                             }
                             break;
@@ -148,8 +154,10 @@ public strictfp class RobotPlayer extends Globals {
                             break;
                     }
                 }
+
                 //now try to water trees
                 tryToWater();
+                numberOfRoundsAlive++;
                 Clock.yield();
             } catch (Exception e) {
                 e.printStackTrace();
