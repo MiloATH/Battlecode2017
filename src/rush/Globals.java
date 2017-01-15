@@ -7,8 +7,8 @@ import java.util.HashMap;
 public class Globals {
     public static RobotController rc;
     public static MapLocation here;
-    public static Team friendly = rc.getTeam();
-    public static Team enemy = rc.getTeam().opponent();
+    public static Team friendly;
+    public static Team enemy;
 
     public static Direction homeDir;
     public static MapLocation centerOfAllInitialArchons;
@@ -38,8 +38,6 @@ public class Globals {
     public static RobotInfo[] visibleOnTargetBullets = null;
 
 
-    public static MapLocation[] FriendlyInitialArchonLocations;
-    public static MapLocation[] EnemyInitialArchonLocations;
 
     public static int minSquadSize = 5;
 
@@ -48,18 +46,7 @@ public class Globals {
         friendly = rc.getTeam();
         enemy = friendly.opponent();
 
-        FriendlyInitialArchonLocations = rc.getInitialArchonLocations(friendly);
-        EnemyInitialArchonLocations = rc.getInitialArchonLocations(enemy);
-        numberOfInitialArchon = FriendlyInitialArchonLocations.length;
-        centerOfFriendlyInitialArchons = new MapLocation(0,0);
-        centerOfEnemyInitialArchons = new MapLocation(0,0);
-        centerOfAllInitialArchons = new MapLocation(0,0);
-        for (MapLocation a : FriendlyInitialArchonLocations) {
-            centerOfFriendlyInitialArchons = FastMath.addVec(centerOfFriendlyInitialArchons, a);
-        }
-        for (MapLocation a : EnemyInitialArchonLocations) {
-            centerOfEnemyInitialArchons = FastMath.addVec(centerOfEnemyInitialArchons, a);
-        }
+
 
         centerOfFriendlyInitialArchons = new MapLocation(0,0);
         centerOfEnemyInitialArchons = new MapLocation(0,0);
