@@ -234,7 +234,7 @@ public strictfp class RobotPlayer extends Globals {
                 }
 
                 //now try to water trees
-                nearbyWander();
+                //DONT MOVE
                 tryToWater();
                 numberOfRoundsAlive++;
                 Clock.yield();
@@ -422,7 +422,7 @@ public strictfp class RobotPlayer extends Globals {
         }
         return false;
     }
-
+    /*
     public static Boolean tryToPlant() throws GameActionException {
         //try to build gardeners
         //can you build a gardener?
@@ -441,7 +441,7 @@ public strictfp class RobotPlayer extends Globals {
         }
         return false;
     }
-
+*/
 
     static boolean willCollideWithMe(BulletInfo bullet) {
         MapLocation myLocation = rc.getLocation();
@@ -547,25 +547,6 @@ public strictfp class RobotPlayer extends Globals {
 
     }
 
-//    public static void navigateTo(MapLocation loc) throws GameActionException {
-//        goingDir = rc.getLocation().directionTo(loc);
-//        if (!rc.hasMoved()) {
-//            while (Clock.getBytecodesLeft() > 100) {
-//                int leftOrRight = rand.nextBoolean() ? -1 : 1;
-//                for (int i = 0; i < 72; i++) {// 72 since that will check every 5 degrees. 360/72 = 5
-//                    Direction offset = new Direction(goingDir.radians + (float) (leftOrRight * 2 * Math.PI * ((float) i) / 72));
-//                    if (rc.canMove(offset) && !rc.hasMoved()) {
-//                        rc.move(offset);
-//                        goingDir = offset;
-//                        return;
-//                    }
-//                }
-//                //Blocked off, just try to get out
-//                //  |----> TODO: make it better?
-//                goingDir = randomDirection();
-//            }
-//        }
-//    }
     public static void navigateTo(MapLocation loc) throws GameActionException {
         goingDir = rc.getLocation().directionTo(loc);
         if (!rc.hasMoved()) {
