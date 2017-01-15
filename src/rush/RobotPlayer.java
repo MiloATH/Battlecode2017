@@ -25,14 +25,13 @@ public strictfp class RobotPlayer extends rush.Globals {
     static Direction[] dirList = new Direction[6];
     static Direction goingDir;
     static int openDirFromList;
-    static Random rand;
     static int earlyGame = 300;
     static int roundNum;
     //0:Tree
     //1:Scout
     //2:Lumberjack
     //3:Soldier
-    static int[] build = {1, 0, 1, 0, 0, 1, 0, 0, 3, 0, 0, 2, 0, 0, 3, 0, 2, 3, 3};
+    static int[] build = {1, 0, 1, 0, 0, 1, 0, 0, 3, 0, 0, 2, 0, 3, 2, 3, 3};
 
     static TreeInfo[] senseNearbyTrees;
     static TreeInfo[] senseAllTrees;
@@ -43,6 +42,13 @@ public strictfp class RobotPlayer extends rush.Globals {
     static Direction directionToTarget;
     static int watering = 0;
     static ArrayList<MapLocation> trees;
+    static float[] treeSurround = {45, 135, 225, 315, 0, 90, 270};
+    static boolean hasHome;
+    static boolean senseBuilder;
+    static int counter;
+
+    static Random rand = new Random();
+
 
     public static void run(RobotController rc) throws GameActionException {
         // This is the RobotController object. You use it to perform actions from this robot,
@@ -101,7 +107,7 @@ public strictfp class RobotPlayer extends rush.Globals {
                     }
                 }
                 if (!rc.hasAttacked()) {
-                    wander();
+
                 }
                 Clock.yield();
             } catch (Exception e) {
@@ -143,6 +149,10 @@ public strictfp class RobotPlayer extends rush.Globals {
     }
 
     static void runGardener() throws GameActionException {
+        if(rc.getRoundNum() == 1) {
+            hasHome = false;
+        }
+
         trees = new ArrayList<MapLocation>();
         while (true) {
             try {
@@ -177,7 +187,6 @@ public strictfp class RobotPlayer extends rush.Globals {
                 }
                 //now try to water trees
                 nearbyWander();
-                tryToWater();
                 Clock.yield();
 
 
@@ -195,38 +204,38 @@ public strictfp class RobotPlayer extends rush.Globals {
         }
     }
 
-    static void startForesting() throws GameActionException {
+    //static void startForesting() throws GameActionException {
 
-        senseNearbyTrees = rc.senseNearbyTrees(2, friendly);
-        senseAllTrees = rc.senseNearbyTrees(6, friendly);
-        if (tryToWater() == treeMovingTo) {
-            targetCurrentHealth = 1000;
-        }
-        if (senseNearbyTrees.length == 0 && rc.canPlantTree(towardsEnemy)) {
-            rc.plantTree(awayFromEnemy);
-        }
-        if (senseAllTrees.length != 0 && targetCurrentHealth == 1000) {
-            for (int i = 0; i <= senseNearbyTrees.length; i++) {
-                float checkedHealth = senseNearbyTrees[i].getHealth();
-                if (checkedHealth < acceptableMissingTreeHealth && checkedHealth < targetCurrentHealth) {
-                    targetCurrentHealth = senseNearbyTrees[i].getHealth();
-                    treeMovingTo = senseNearbyTrees[i].getID();
-                }
-            }
-        }
+        //senseNearbyTrees = rc.senseNearbyTrees(2, friendly);
+        //senseAllTrees = rc.senseNearbyTrees(6, friendly);
+        //if (tryToWater() == treeMovingTo) {
+            //targetCurrentHealth = 1000;
+        //}
+        //if (senseNearbyTrees.length == 0 && rc.canPlantTree(towardsEnemy)) {
+            //rc.plantTree(awayFromEnemy);
+        //}
+        //if (senseAllTrees.length != 0 && targetCurrentHealth == 1000) {
+            //for (int i = 0; i <= senseNearbyTrees.length; i++) {
+                //float checkedHealth = senseNearbyTrees[i].getHealth();
+                //if (checkedHealth < acceptableMissingTreeHealth && checkedHealth < targetCurrentHealth) {
+                   // targetCurrentHealth = senseNearbyTrees[i].getHealth();
+                    //treeMovingTo = senseNearbyTrees[i].getID();
+                //}
+            //}
+        //}
 
-        if (senseAllTrees != null) {
-            directionToTarget = rc.getLocation().directionTo(senseNearbyTrees[treeMovingTo].getLocation());
-        }
-        if (rc.canMove(directionToTarget)) {
-            rc.move(directionToTarget);
-        } else if (rc.canMove(directionToTarget.rotateLeftDegrees(45))) {
-            rc.move(directionToTarget.rotateLeftDegrees(45));
-        } else if (rc.canMove(directionToTarget.rotateRightDegrees(90))) {
-            rc.move(directionToTarget.rotateRightDegrees(90));
-        }
-        Clock.yield();
-    }
+        //if (senseAllTrees != null) {
+            //directionToTarget = rc.getLocation().directionTo(senseNearbyTrees[treeMovingTo].getLocation());
+        //}
+        //if (rc.canMove(directionToTarget)) {
+            //rc.move(directionToTarget);
+        //} else if (rc.canMove(directionToTarget.rotateLeftDegrees(45))) {
+            //rc.move(directionToTarget.rotateLeftDegrees(45));
+        //} else if (rc.canMove(directionToTarget.rotateRightDegrees(90))) {
+            //rc.move(directionToTarget.rotateRightDegrees(90));
+        //}
+        //Clock.yield();
+    //}
 
     public static void tryToShake(TreeInfo t) throws GameActionException {
         MapLocation tree = t.getLocation();
@@ -259,28 +268,35 @@ public strictfp class RobotPlayer extends rush.Globals {
 
     public static void nearbyWander() throws GameActionException {
         try {//TODO. make it better
-            goingDir = randomDirection();
-            if(trees.size()>0) {
-                watering++;
-                MapLocation tree = trees.get(watering%trees.size());
-                if(rc.getLocation().distanceTo(tree) > 7) {
-                    goingDir = rc.getLocation().directionTo(tree);
-                }
-            }
-            if (!rc.hasMoved()) {
-                while (Clock.getBytecodesLeft() > 100) {
-                    int leftOrRight = rand.nextBoolean() ? -1 : 1;
-                    for (int i = 0; i < 72; i++) {
-                        Direction offset = new Direction(goingDir.radians + (float) (leftOrRight * 2 * Math.PI * ((float) i) / 72));
-                        if (rc.canMove(offset) && !rc.hasMoved()) {
-                            rc.move(offset);
-                            goingDir = offset;
-                            return;
-                        }
+            RobotInfo[] friendlyBots = rc.senseNearbyRobots(6, friendly);
+            if (!hasHome) {
+                for (int i = 0; i <= friendlyBots.length; i++) {
+                    if (rc.getType() == RobotType.ARCHON || rc.getType() == RobotType.GARDENER) {
+                        senseBuilder = true;
+                    } else {
+                        senseBuilder = false;
                     }
-                    goingDir = randomDirection();
+
+                    if (senseBuilder && !hasHome) {
+                        Direction towardsEnemyRandomDir = towardsEnemy.rotateRightDegrees((rand.nextInt(720) - 360) / 2);
+                        if (rc.canMove(towardsEnemyRandomDir)) {
+                            break;
+                        } else {
+                            if (rand.nextBoolean()) {
+                                towardsEnemyRandomDir.rotateLeftDegrees(100);
+                            } else {
+                                towardsEnemyRandomDir.rotateRightDegrees(100);
+                            }
+                            tryMove(towardsEnemyRandomDir);
+                            Clock.yield();
+                        }
+                    } else {
+                        hasHome = true;
+                        tryToPlant();
+                    }
                 }
             }
+            tryToWater();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -367,8 +383,8 @@ public strictfp class RobotPlayer extends rush.Globals {
                 //only plant trees on a sub-grid
                 MapLocation p = rc.getLocation().add(dirList[i], GameConstants.GENERAL_SPAWN_OFFSET + GameConstants.BULLET_TREE_RADIUS + rc.getType().bodyRadius);
                 if (modGood(p.x, 6, 0.2f) && modGood(p.y, 6, 0.2f)) {
-                    if (rc.canPlantTree(dirList[i])) {
-                        rc.plantTree(dirList[i]);
+                    if (rc.canPlantTree(Direction.getEast().rotateRightDegrees(treeSurround[i]))) {
+                        rc.plantTree(Direction.getEast().rotateRightDegrees(treeSurround[i]));
                         trees.add(p);
                         return true;
                     }
@@ -430,34 +446,35 @@ public strictfp class RobotPlayer extends rush.Globals {
      * @throws GameActionException
      */
     static boolean tryMove(Direction dir, float degreeOffset, int checksPerSide) throws GameActionException {
-
-        // First, try intended direction
-        if (!rc.hasMoved() && rc.canMove(dir)) {
-            rc.move(dir);
-            return true;
-        }
-
-        // Now try a bunch of similar angles
-        //boolean moved = rc.hasMoved();
-        int currentCheck = 1;
-
-        while (currentCheck <= checksPerSide) {
-            // Try the offset of the left side
-            if (!rc.hasMoved() && rc.canMove(dir.rotateLeftDegrees(degreeOffset * currentCheck))) {
-                rc.move(dir.rotateLeftDegrees(degreeOffset * currentCheck));
+        if (!hasHome) {
+            // First, try intended direction
+            if (!rc.hasMoved() && rc.canMove(dir)) {
+                rc.move(dir);
                 return true;
             }
-            // Try the offset on the right side
-            if (!rc.hasMoved() && rc.canMove(dir.rotateRightDegrees(degreeOffset * currentCheck))) {
-                rc.move(dir.rotateRightDegrees(degreeOffset * currentCheck));
-                return true;
-            }
-            // No move performed, try slightly further
-            currentCheck++;
-        }
 
-        // A move never happened, so return false.
-        return false;
+            // Now try a bunch of similar angles
+            //boolean moved = rc.hasMoved();
+            int currentCheck = 1;
+
+            while (currentCheck <= checksPerSide) {
+                // Try the offset of the left side
+                if (!rc.hasMoved() && rc.canMove(dir.rotateLeftDegrees(degreeOffset * currentCheck))) {
+                    rc.move(dir.rotateLeftDegrees(degreeOffset * currentCheck));
+                    return true;
+                }
+                // Try the offset on the right side
+                if (!rc.hasMoved() && rc.canMove(dir.rotateRightDegrees(degreeOffset * currentCheck))) {
+                    rc.move(dir.rotateRightDegrees(degreeOffset * currentCheck));
+                    return true;
+                }
+                // No move performed, try slightly further
+                currentCheck++;
+            }
+
+            // A move never happened, so return false.
+
+        } return false;
     }
 
     static boolean trySidestep(BulletInfo bullet) throws GameActionException {
@@ -485,25 +502,25 @@ public strictfp class RobotPlayer extends rush.Globals {
 
     }
 
-    public static void navigateTo(MapLocation loc) throws GameActionException {
-        goingDir = rc.getLocation().directionTo(loc);
-        if (!rc.hasMoved()) {
-            while (Clock.getBytecodesLeft() > 100) {
-                int leftOrRight = rand.nextBoolean() ? -1 : 1;
-                for (int i = 0; i < 72; i++) {// 72 since that will check every 5 degrees. 360/72 = 5
-                    Direction offset = new Direction(goingDir.radians + (float) (leftOrRight * 2 * Math.PI * ((float) i) / 72));
-                    if (rc.canMove(offset) && !rc.hasMoved()) {
-                        rc.move(offset);
-                        goingDir = offset;
-                        return;
-                    }
-                }
-                //Blocked off, just try to get out
-                //  |----> TODO: make it better?
-                goingDir = randomDirection();
-            }
-        }
-    }
+//    public static void navigateTo(MapLocation loc) throws GameActionException {
+//        goingDir = rc.getLocation().directionTo(loc);
+//        if (!rc.hasMoved()) {
+//            while (Clock.getBytecodesLeft() > 100) {
+//                int leftOrRight = rand.nextBoolean() ? -1 : 1;
+//                for (int i = 0; i < 72; i++) {// 72 since that will check every 5 degrees. 360/72 = 5
+//                    Direction offset = new Direction(goingDir.radians + (float) (leftOrRight * 2 * Math.PI * ((float) i) / 72));
+//                    if (rc.canMove(offset) && !rc.hasMoved()) {
+//                        rc.move(offset);
+//                        goingDir = offset;
+//                        return;
+//                    }
+//                }
+//                //Blocked off, just try to get out
+//                //  |----> TODO: make it better?
+//                goingDir = randomDirection();
+//            }
+//        }
+//    }
 
     public static void victoryPointsEndgameCheck() throws GameActionException {
         //If we have 10000 bullets, end the game.
