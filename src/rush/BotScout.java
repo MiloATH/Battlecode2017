@@ -29,7 +29,7 @@ public class BotScout extends RobotPlayer {
                             nearbyGardener = true;
                             Direction opponent = rc.getLocation().directionTo(b.getLocation());
                             //TODO: Don't run over your own bullets
-                            if (!rc.hasMoved() && rc.canMove(opponent)) {
+                            if (!rc.hasMoved() && rc.canMove(opponent, (float) (b.getLocation().distanceTo(b.getLocation()) - 0.25))) {
                                 rc.move(opponent, (float) (b.getLocation().distanceTo(b.getLocation()) - 0.25));
                             }
                             if (rc.canFireSingleShot()) {

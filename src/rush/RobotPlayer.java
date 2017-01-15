@@ -123,18 +123,20 @@ public strictfp class RobotPlayer extends Globals {
                 int enemySeen = rc.readBroadcast(ENEMY_SEEN_CHANNEL);
                 if (rc.getRoundNum() == ROUND_TO_BROADCAST_TREE_DENSITY + 1) {
                     int treeDensity = rc.readBroadcast(TREE_DENSITY_CHANNEL);
-                    if (treeDensity > 25) {
+                    if (treeDensity > 30) {
+                        ATTACK_ROUND = 950;
+                    }
+                    if (treeDensity > 60) {
                         ATTACK_ROUND = 1250;
                     }
                 }
                 if (enemySeen != 0) {
                     if (rc.getRoundNum() > ATTACK_ROUND) {//ATTACK
                         rc.broadcast(RALLY_LOCATION_CHANNEL, enemySeen);
-                    }
-                    else{
+                    } else {
                         MapLocation me = rc.getLocation();
                         MapLocation enemy = decodeBroadcastLoc(enemySeen);
-                        MapLocation quarterOfTheWay = new MapLocation(me.x + (enemy.x-me.x)/4, me.y + (enemy.y-me.y)/4);
+                        MapLocation quarterOfTheWay = new MapLocation(me.x + (enemy.x - me.x) / 4, me.y + (enemy.y - me.y) / 4);
                         rc.broadcast(RALLY_LOCATION_CHANNEL, encodeBroadcastLoc(quarterOfTheWay));
                     }
                 }
@@ -157,10 +159,10 @@ public strictfp class RobotPlayer extends Globals {
         if (rc.getRoundNum() >= ROUND_TO_BROADCAST_TREE_DENSITY + 1) {
             int treeDensity = rc.readBroadcast(TREE_DENSITY_CHANNEL);
             if (treeDensity > 25) {
-                INITIAL_MOVES_BASE = 30;
+                INITIAL_MOVES_BASE = 40;
             }
             if (treeDensity > 80) {
-                INITIAL_MOVES_BASE = 20;
+                INITIAL_MOVES_BASE = 30;
             }
         }
         while (true) {
