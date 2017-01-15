@@ -4,7 +4,7 @@ import battlecode.common.*;
 
 import java.util.*;
 
-public strictfp class RobotPlayer extends rush.Globals {
+public strictfp class RobotPlayer extends Globals {
     static RobotController rc;
     static Random myRand;
     @SuppressWarnings("unused")
@@ -15,23 +15,30 @@ public strictfp class RobotPlayer extends rush.Globals {
     static int TREE_CHANNEL = 80;
     static int SOLDIER_CHANNEL = 90;
     static int ENEMY_GARDENER_SEEN_CHANNEL = 100;
+    static int RALLY_LOCATION_CHANNEL = 110;
+    static int TREE_DENSITY_CHANNEL = 120;
+    static int ENEMY_SEEN_CHANNEL = 900;
 
     // Keep important numbers here
-    static int GARDENER_MAX = 30;
+    static int GARDENER_MAX = 15;
     static int LUMBERJACK_MAX = 30;
     static int SCOUT_MAX = 20;
-    static int SURPLUS_BULLETS = 500;
+    static int SURPLUS_BULLETS = 160;
+    static int MAX_PATIENCE = 50;
+    static int ROUND_TO_BROADCAST_TREE_DENSITY = 100;
+    static int ATTACK_ROUND = 750;
+    static int INITIAL_MOVES_BASE = 10;
 
     static Direction[] dirList = new Direction[6];
     static Direction goingDir;
     static int openDirFromList;
     static int earlyGame = 300;
     static int roundNum;
-    //0:Tree
-    //1:Scout
-    //2:Lumberjack
-    //3:Soldier
-    static int[] build = {1, 0, 1, 0, 0, 1, 0, 0, 3, 0, 0, 2, 0, 3, 2, 3, 3};
+    static int numberOfRoundsAlive;
+    static Boolean goRight = true;//True means go right. False means go left.
+    static int patienceLeft = MAX_PATIENCE;
+
+
 
     static TreeInfo[] senseNearbyTrees;
     static TreeInfo[] senseAllTrees;
@@ -48,44 +55,46 @@ public strictfp class RobotPlayer extends rush.Globals {
     static int counter;
 
     static Random rand = new Random();
-
+    //0:Tree
+    //1:Scout
+    //2:Lumberjack
+    //3:Soldier
+    static int[] build = {1, 0, 1, 0, 0, 1, 0, 0, 3, 0, 0, 2, 0, 0, 3, 0, 2, 3, 3};
+    static int[] manyLumberjackBuild = {2, 0, 1, 0, 0, 1, 0, 2, 2, 2, 0, 2, 0, 2, 3, 0, 2, 3, 3};
+    static int[] almostAllLumberjackBuild = {2, 0, 2, 0, 2, 1, 0, 2, 2, 0, 2, 2, 0, 2, 2, 0, 2, 2, 3};
 
     public static void run(RobotController rc) throws GameActionException {
         // This is the RobotController object. You use it to perform actions from this robot,
         // and to get information on its current status.
-        try {
-            RobotPlayer.rc = rc;
-            initDirList();
-            Globals.init(rc);
-            openDirFromList = rc.getID() % 6;
-            roundNum = rc.getRoundNum();
-            rand = new Random(rc.getID());
-            myRand = new Random(rc.getID());
-            goingDir = randomDir();
-            // Here, we've separated the controls into a different method for each RobotType.
-            // You can add the missing ones or rewrite this into your own control structure.
-            switch (rc.getType()) {
-                case ARCHON:
-                    runArchon();
-                    break;
-                case GARDENER:
-                    runGardener();
-                    break;
-                case SOLDIER:
-                    BotSoldier.loop();
-                    break;
-                case LUMBERJACK:
-                    BotLumberJack.loop();
-                    break;
-                case SCOUT:
-                    BotScout.loop();
-                    break;
-                case TANK:
-                    runTank();
-            }
-        } catch (Exception e) {
-            System.out.println("EXCEPTION IN RUN()");
-            e.printStackTrace();
+        RobotPlayer.rc = rc;
+        initDirList();
+        Globals.init(rc);
+        numberOfRoundsAlive = 0;
+        openDirFromList = rc.getID() % 6;
+        roundNum = rc.getRoundNum();
+        rand = new Random(rc.getID());
+        myRand = new Random(rc.getID());
+        goingDir = randomDir();
+        // Here, we've separated the controls into a different method for each RobotType.
+        // You can add the missing ones or rewrite this into your own control structure.
+        switch (rc.getType()) {
+            case ARCHON:
+                runArchon();
+                break;
+            case GARDENER:
+                runGardener();
+                break;
+            case SOLDIER:
+                BotSoldier.loop();
+                break;
+            case LUMBERJACK:
+                BotLumberJack.loop();
+                break;
+            case SCOUT:
+                BotScout.loop();
+                break;
+            case TANK:
+                runTank();
         }
     }
 
@@ -118,29 +127,41 @@ public strictfp class RobotPlayer extends rush.Globals {
 
 
     static void runArchon() throws GameActionException {
+        //Initial rally point
+        //MapLocation me = rc.getLocation();
+        //rc.broadcast(RALLY_LOCATION_CHANNEL, encodeBroadcastLoc(new MapLocation(me.x + 5, me.y + 5)));
         while (true) {
             try {
                 victoryPointsEndgameCheck();
                 dodge();
+                //TODO: make it better or remove middleman
+                //Set rally point if enemy seen and above a round #
+                int enemySeen = rc.readBroadcast(ENEMY_SEEN_CHANNEL);
+                if (rc.getRoundNum() == ROUND_TO_BROADCAST_TREE_DENSITY + 1) {
+                    int treeDensity = rc.readBroadcast(TREE_DENSITY_CHANNEL);
+                    if (treeDensity > 25) {
+                        ATTACK_ROUND = 1250;
+                    }
+                }
+                if (enemySeen != 0) {
+                    if (rc.getRoundNum() > ATTACK_ROUND) {//ATTACK
+                        rc.broadcast(RALLY_LOCATION_CHANNEL, enemySeen);
+                    }
+                    else{
+                        MapLocation me = rc.getLocation();
+                        MapLocation enemy = decodeBroadcastLoc(enemySeen);
+                        MapLocation quarterOfTheWay = new MapLocation(me.x + (enemy.x-me.x)/4, me.y + (enemy.y-me.y)/4);
+                        rc.broadcast(RALLY_LOCATION_CHANNEL, encodeBroadcastLoc(quarterOfTheWay));
+                    }
+                }
                 //Build gardener if less than max
                 int prevNumGard = rc.readBroadcast(GARDENER_CHANNEL);
                 if (prevNumGard < GARDENER_MAX * rc.getRoundNum() / rc.getRoundLimit() + 1 || rc.getTeamBullets() >= SURPLUS_BULLETS) {
                     rc.broadcast(GARDENER_CHANNEL, prevNumGard + tryToBuild(RobotType.GARDENER, RobotType.GARDENER.bulletCost));
                 }
 
-                //Testing for trees if it's the first turn.
-                
-                if(rc.getRoundNum() == 1){
-                	TreeInfo[] nearbyTrees = rc.senseNearbyTrees();
-                	if(nearbyTrees.length >= 10){
-                		rc.broadcast(TREE_CHANNEL, nearbyTrees.length);
-                	}
-                }
-         
-               
-
                 //Then wander
-                //wander();
+                //retreat();
                 Clock.yield();
             } catch (Exception e) {
                 e.printStackTrace();
@@ -154,10 +175,34 @@ public strictfp class RobotPlayer extends rush.Globals {
         }
 
         trees = new ArrayList<MapLocation>();
+        if (rc.getRoundNum() >= ROUND_TO_BROADCAST_TREE_DENSITY + 1) {
+            int treeDensity = rc.readBroadcast(TREE_DENSITY_CHANNEL);
+            if (treeDensity > 25) {
+                INITIAL_MOVES_BASE = 30;
+            }
+            if (treeDensity > 80) {
+                INITIAL_MOVES_BASE = 20;
+            }
+        }
         while (true) {
             try {
                 victoryPointsEndgameCheck();
                 dodge();
+                //TODO: Make tree density more general
+                if (rc.getRoundNum() == ROUND_TO_BROADCAST_TREE_DENSITY + 1) {
+                    int treeDensity = rc.readBroadcast(TREE_DENSITY_CHANNEL);
+                    if (treeDensity > 0 && treeDensity <= 5) {//Few trees
+                        //For now, be the same as default build
+                    } else if (treeDensity <= 25) {//Medium amount of trees
+                        build = manyLumberjackBuild;
+                    } else {//THATS ALOT OF TREES!
+                        build = almostAllLumberjackBuild;
+                    }
+                }
+                int moveUntilRound = INITIAL_MOVES_BASE + 5 * (GARDENER_MAX * rc.getRoundNum() / rc.getRoundLimit() + 1);
+                if (numberOfRoundsAlive < moveUntilRound) {
+                    wander();
+                }
                 int prevLum = rc.readBroadcast(LUMBERJACK_CHANNEL);
                 int prevScouts = rc.readBroadcast(SCOUTS_CHANNEL);
                 int prevTree = rc.readBroadcast(TREE_CHANNEL);
@@ -166,7 +211,7 @@ public strictfp class RobotPlayer extends rush.Globals {
                 if (buildNum < build.length) {
                     switch (build[buildNum]) {
                         case 0://Tree
-                            if (tryToPlant()) {
+                            if (numberOfRoundsAlive > moveUntilRound && (tryToPlant() || rc.getTeamBullets() > 2 * SURPLUS_BULLETS)) {//Short circut evaluation. Only plants after moveUntilRound
                                 rc.broadcast(TREE_CHANNEL, prevTree + 1);
                             }
                             break;
@@ -185,11 +230,12 @@ public strictfp class RobotPlayer extends rush.Globals {
                             break;
                     }
                 }
+
                 //now try to water trees
                 nearbyWander();
+                tryToWater();
+                numberOfRoundsAlive++;
                 Clock.yield();
-
-
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -329,17 +375,17 @@ public strictfp class RobotPlayer extends rush.Globals {
         }
     }
 
-    public static int tryToWater() throws GameActionException {
+    public static void tryToWater() throws GameActionException {
         if (rc.canWater()) {
             TreeInfo[] nearbyTrees = rc.senseNearbyTrees();
             for (int i = 0; i < nearbyTrees.length; i++)
-                if (nearbyTrees[i].getHealth() < GameConstants.BULLET_TREE_MAX_HEALTH - GameConstants.WATER_HEALTH_REGEN_RATE
-                        && rc.canWater(nearbyTrees[i].getID())) {
-                    rc.water(nearbyTrees[i].getID());
-                    return nearbyTrees[i].getID();
+                if (nearbyTrees[i].getHealth() < GameConstants.BULLET_TREE_MAX_HEALTH - GameConstants.WATER_HEALTH_REGEN_RATE) {
+                    if (nearbyTrees[i].getTeam() == rc.getTeam() && rc.canWater(nearbyTrees[i].getID())) {
+                        rc.water(nearbyTrees[i].getID());
+                        break;
+                    }
                 }
         }
-        return -1;
     }
 
     public static int tryToBuild(RobotType t) throws GameActionException {
@@ -360,7 +406,7 @@ public strictfp class RobotPlayer extends rush.Globals {
         return 0;
     }
 
-    /*public static Boolean tryToPlant() throws GameActionException {
+    public static Boolean tryToPlant() throws GameActionException {
         //try to build gardeners
         //can you build a gardener?
 
@@ -373,7 +419,7 @@ public strictfp class RobotPlayer extends rush.Globals {
             }
         }
         return false;
-    }*/
+    }
 
     public static Boolean tryToPlant() throws GameActionException {
         //try to build gardeners
@@ -394,9 +440,6 @@ public strictfp class RobotPlayer extends rush.Globals {
         return false;
     }
 
-    public static boolean modGood(float number, float spacing, float fraction) {
-        return (number % spacing) < spacing * fraction;
-    }
 
     static boolean willCollideWithMe(BulletInfo bullet) {
         MapLocation myLocation = rc.getLocation();
@@ -521,6 +564,40 @@ public strictfp class RobotPlayer extends rush.Globals {
 //            }
 //        }
 //    }
+    public static void navigateTo(MapLocation loc) throws GameActionException {
+        goingDir = rc.getLocation().directionTo(loc);
+        if (!rc.hasMoved()) {
+            while (Clock.getBytecodesLeft() > 100) {
+                int leftOrRight = goRight ? -1 : 1;
+                for (int i = 0; i < 72; i++) {
+                    Direction offset = new Direction(goingDir.radians + (float) (leftOrRight * 2 * Math.PI * ((float) i) / 72));
+                    if (rc.canMove(offset) && !rc.hasMoved()) {
+                        if (i > 0) {
+                            patienceLeft--;
+                            //If lumberjack just stay at it and uct through
+                            if (patienceLeft <= 0 && rc.getType() != RobotType.LUMBERJACK) {
+                                goRight = !goRight;
+                                patienceLeft = MAX_PATIENCE;
+                            }
+                        }
+                        rc.move(offset);
+                        goingDir = offset;
+                        return;
+                    }
+                }
+                //Blocked off, just try to get out
+                //  |----> TODO: make it better?
+                goingDir = randomDirection();
+            }
+        }
+    }
+
+    public static void rally() throws GameActionException {
+        MapLocation rallyPoint = decodeBroadcastLoc(rc.readBroadcast(RALLY_LOCATION_CHANNEL));
+        if (rallyPoint != null) {
+            navigateTo(rallyPoint);
+        }
+    }
 
     public static void victoryPointsEndgameCheck() throws GameActionException {
         //If we have 10000 bullets, end the game.
@@ -529,7 +606,5 @@ public strictfp class RobotPlayer extends rush.Globals {
         }
     }
 
-    public static void nearbyEnemy() {
 
-    }
 }

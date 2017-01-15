@@ -1,4 +1,5 @@
 package rush;
+
 import battlecode.common.*;
 
 public class BotLumberJack extends RobotPlayer {
@@ -8,6 +9,7 @@ public class BotLumberJack extends RobotPlayer {
             try {
                 victoryPointsEndgameCheck();
                 dodge();
+                rally();
                 RobotInfo[] bots = rc.senseNearbyRobots();
                 for (RobotInfo b : bots) {
                     if (b.getTeam() != rc.getTeam() && rc.canStrike()) {

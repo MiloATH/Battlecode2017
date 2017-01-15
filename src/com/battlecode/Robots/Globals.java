@@ -37,6 +37,7 @@ public class Globals {
     public static RobotInfo[] visibleOnTargetBullets = null;
 
 
+
     public static int minSquadSize = 5;
 
     public static void init(RobotController theRC) {
