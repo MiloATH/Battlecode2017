@@ -75,7 +75,7 @@ public class BotScout extends RobotPlayer {
                                 System.out.println("MOVING " + (distance) + " in direction " + opponent.toString());
                                 rc.move(opponent, distance);
                             }
-                            if (distance < 3 && !rc.hasMoved() && !rc.hasAttacked() && rc.canMove(opponent.opposite(), distance)) {
+                            if (distance < 4 && !rc.hasMoved() && !rc.hasAttacked() && rc.canMove(opponent.opposite(), distance)) {
                                 System.out.println("MOVING " + (distance) + " in direction " + opponent.opposite().toString());
                                 rc.move(opponent.opposite(), distance);
                             }

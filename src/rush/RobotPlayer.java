@@ -27,7 +27,7 @@ public strictfp class RobotPlayer extends Globals {
     static int MAX_PATIENCE = 50;
     static int ROUND_TO_BROADCAST_TREE_DENSITY = 100;
     static int ATTACK_ROUND = 750;
-    static int INITIAL_MOVES_BASE = 10;
+    static int INITIAL_MOVES_BASE = 6;
 
     static Direction[] dirList = new Direction[6];
     static Direction goingDir;
