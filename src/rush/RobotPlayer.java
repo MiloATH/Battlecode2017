@@ -15,12 +15,19 @@ public strictfp class RobotPlayer extends Globals {
     static int TREE_CHANNEL = 80;
     static int SOLDIER_CHANNEL = 90;
     static int ENEMY_GARDENER_SEEN_CHANNEL = 100;
+    static int RALLY_LOCATION_CHANNEL = 110;
+    static int TREE_DENSITY_CHANNEL = 120;
+    static int ENEMY_SEEN_CHANNEL = 900;
 
     // Keep important numbers here
     static int GARDENER_MAX = 15;
     static int LUMBERJACK_MAX = 30;
     static int SCOUT_MAX = 20;
-    static int SURPLUS_BULLETS = 500;
+    static int SURPLUS_BULLETS = 160;
+    static int MAX_PATIENCE = 50;
+    static int ROUND_TO_BROADCAST_TREE_DENSITY = 100;
+    static int ATTACK_ROUND = 750;
+    static int INITIAL_MOVES_BASE = 10;
 
     static Direction[] dirList = new Direction[6];
     static Direction goingDir;
@@ -29,11 +36,16 @@ public strictfp class RobotPlayer extends Globals {
     static int earlyGame = 300;
     static int roundNum;
     static int numberOfRoundsAlive;
+    static Boolean goRight = true;//True means go right. False means go left.
+    static int patienceLeft = MAX_PATIENCE;
+
     //0:Tree
     //1:Scout
     //2:Lumberjack
     //3:Soldier
     static int[] build = {1, 0, 1, 0, 0, 1, 0, 0, 3, 0, 0, 2, 0, 0, 3, 0, 2, 3, 3};
+    static int[] manyLumberjackBuild = {2, 0, 1, 0, 0, 1, 0, 2, 2, 2, 0, 2, 0, 2, 3, 0, 2, 3, 3};
+    static int[] almostAllLumberjackBuild = {2, 0, 2, 0, 2, 1, 0, 2, 2, 0, 2, 2, 0, 2, 2, 0, 2, 2, 3};
 
     public static void run(RobotController rc) throws GameActionException {
         // This is the RobotController object. You use it to perform actions from this robot,
@@ -99,10 +111,33 @@ public strictfp class RobotPlayer extends Globals {
 
 
     static void runArchon() throws GameActionException {
+        //Initial rally point
+        //MapLocation me = rc.getLocation();
+        //rc.broadcast(RALLY_LOCATION_CHANNEL, encodeBroadcastLoc(new MapLocation(me.x + 5, me.y + 5)));
         while (true) {
             try {
                 victoryPointsEndgameCheck();
                 dodge();
+                //TODO: make it better or remove middleman
+                //Set rally point if enemy seen and above a round #
+                int enemySeen = rc.readBroadcast(ENEMY_SEEN_CHANNEL);
+                if (rc.getRoundNum() == ROUND_TO_BROADCAST_TREE_DENSITY + 1) {
+                    int treeDensity = rc.readBroadcast(TREE_DENSITY_CHANNEL);
+                    if (treeDensity > 25) {
+                        ATTACK_ROUND = 1250;
+                    }
+                }
+                if (enemySeen != 0) {
+                    if (rc.getRoundNum() > ATTACK_ROUND) {//ATTACK
+                        rc.broadcast(RALLY_LOCATION_CHANNEL, enemySeen);
+                    }
+                    else{
+                        MapLocation me = rc.getLocation();
+                        MapLocation enemy = decodeBroadcastLoc(enemySeen);
+                        MapLocation quarterOfTheWay = new MapLocation(me.x + (enemy.x-me.x)/4, me.y + (enemy.y-me.y)/4);
+                        rc.broadcast(RALLY_LOCATION_CHANNEL, encodeBroadcastLoc(quarterOfTheWay));
+                    }
+                }
                 //Build gardener if less than max
                 int prevNumGard = rc.readBroadcast(GARDENER_CHANNEL);
                 if (prevNumGard < GARDENER_MAX * rc.getRoundNum() / rc.getRoundLimit() + 1 || rc.getTeamBullets() >= SURPLUS_BULLETS) {
@@ -119,11 +154,31 @@ public strictfp class RobotPlayer extends Globals {
     }
 
     static void runGardener() throws GameActionException {
+        if (rc.getRoundNum() >= ROUND_TO_BROADCAST_TREE_DENSITY + 1) {
+            int treeDensity = rc.readBroadcast(TREE_DENSITY_CHANNEL);
+            if (treeDensity > 25) {
+                INITIAL_MOVES_BASE = 30;
+            }
+            if (treeDensity > 80) {
+                INITIAL_MOVES_BASE = 20;
+            }
+        }
         while (true) {
             try {
                 victoryPointsEndgameCheck();
                 dodge();
-                int moveUntilRound = 5 * (GARDENER_MAX * rc.getRoundNum() / rc.getRoundLimit() + 1);
+                //TODO: Make tree density more general
+                if (rc.getRoundNum() == ROUND_TO_BROADCAST_TREE_DENSITY + 1) {
+                    int treeDensity = rc.readBroadcast(TREE_DENSITY_CHANNEL);
+                    if (treeDensity > 0 && treeDensity <= 5) {//Few trees
+                        //For now, be the same as default build
+                    } else if (treeDensity <= 25) {//Medium amount of trees
+                        build = manyLumberjackBuild;
+                    } else {//THATS ALOT OF TREES!
+                        build = almostAllLumberjackBuild;
+                    }
+                }
+                int moveUntilRound = INITIAL_MOVES_BASE + 5 * (GARDENER_MAX * rc.getRoundNum() / rc.getRoundLimit() + 1);
                 if (numberOfRoundsAlive < moveUntilRound) {
                     wander();
                 }
@@ -135,7 +190,7 @@ public strictfp class RobotPlayer extends Globals {
                 if (buildNum < build.length) {
                     switch (build[buildNum]) {
                         case 0://Tree
-                            if (numberOfRoundsAlive > moveUntilRound && tryToPlant()) {//Short circut evaluation. Only plants after moveUntilRound
+                            if (numberOfRoundsAlive > moveUntilRound && (tryToPlant() || rc.getTeamBullets() > 2 * SURPLUS_BULLETS)) {//Short circut evaluation. Only plants after moveUntilRound
                                 rc.broadcast(TREE_CHANNEL, prevTree + 1);
                             }
                             break;
@@ -383,10 +438,18 @@ public strictfp class RobotPlayer extends Globals {
         goingDir = rc.getLocation().directionTo(loc);
         if (!rc.hasMoved()) {
             while (Clock.getBytecodesLeft() > 100) {
-                int leftOrRight = rand.nextBoolean() ? -1 : 1;
-                for (int i = 0; i < 72; i++) {// 72 since that will check every 5 degrees. 360/72 = 5
+                int leftOrRight = goRight ? -1 : 1;
+                for (int i = 0; i < 72; i++) {
                     Direction offset = new Direction(goingDir.radians + (float) (leftOrRight * 2 * Math.PI * ((float) i) / 72));
                     if (rc.canMove(offset) && !rc.hasMoved()) {
+                        if (i > 0) {
+                            patienceLeft--;
+                            //If lumberjack just stay at it and uct through
+                            if (patienceLeft <= 0 && rc.getType() != RobotType.LUMBERJACK) {
+                                goRight = !goRight;
+                                patienceLeft = MAX_PATIENCE;
+                            }
+                        }
                         rc.move(offset);
                         goingDir = offset;
                         return;
@@ -399,11 +462,19 @@ public strictfp class RobotPlayer extends Globals {
         }
     }
 
+    public static void rally() throws GameActionException {
+        MapLocation rallyPoint = decodeBroadcastLoc(rc.readBroadcast(RALLY_LOCATION_CHANNEL));
+        if (rallyPoint != null) {
+            navigateTo(rallyPoint);
+        }
+    }
+
     public static void victoryPointsEndgameCheck() throws GameActionException {
         //If we have 10000 bullets, end the game.
         if (rc.getTeamBullets() >= 10000 || (rc.getRoundLimit() - rc.getRoundNum() < 2)) {
             rc.donate(rc.getTeamBullets());
         }
     }
+
 
 }

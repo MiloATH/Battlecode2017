@@ -14,9 +14,9 @@ public class BotSoldier extends RobotPlayer{
             try {
                 victoryPointsEndgameCheck();
                 dodge();
+                rally();
                 shakeNeighbors();
                 MapLocation myLocation = rc.getLocation();
-
                 // See if there are any nearby enemy robots
                 RobotInfo[] robots = rc.senseNearbyRobots(-1, enemy);
 
@@ -30,7 +30,7 @@ public class BotSoldier extends RobotPlayer{
                 }
 
                 // Move randomly
-                RobotPlayer.wander();
+                wander();
 
                 // Clock.yield() makes the robot wait until the next turn, then it will perform this loop again
                 Clock.yield();
