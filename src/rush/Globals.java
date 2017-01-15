@@ -40,20 +40,34 @@ public class Globals {
 
 
     public static int minSquadSize = 5;
+    private static MapLocation[] FriendlyInitialArchonLocations;
+    private static MapLocation[] EnemyInitialArchonLocations;
 
     public static void init(RobotController theRC) {
         rc = theRC;
         friendly = rc.getTeam();
         enemy = friendly.opponent();
-
-
+        /*
+        FriendlyInitialArchonLocations = rc.getInitialArchonLocations(friendly);
+        EnemyInitialArchonLocations = rc.getInitialArchonLocations(enemy);
+        numberOfInitialArchon = FriendlyInitialArchonLocations.length;
+        centerOfFriendlyInitialArchons = new MapLocation(0,0);
+        centerOfEnemyInitialArchons = new MapLocation(0,0);
+        centerOfAllInitialArchons = new MapLocation(0,0);
+        for (MapLocation a : FriendlyInitialArchonLocations) {
+            centerOfFriendlyInitialArchons = FastMath.addVec(centerOfFriendlyInitialArchons, a);
+        }
+        for (MapLocation a : EnemyInitialArchonLocations) {
+            centerOfEnemyInitialArchons = FastMath.addVec(centerOfEnemyInitialArchons, a);
+        }
 
         centerOfFriendlyInitialArchons = new MapLocation(0,0);
         centerOfEnemyInitialArchons = new MapLocation(0,0);
         centerOfFriendlyInitialArchons = ArchonCenter(1.0 / (double)numberOfInitialArchon, centerOfFriendlyInitialArchons);
         centerOfEnemyInitialArchons = ArchonCenter(1.0 / (double)numberOfInitialArchon, centerOfEnemyInitialArchons);
         awayFromEnemy = centerOfEnemyInitialArchons.directionTo(centerOfFriendlyInitialArchons);
-        towardsEnemy = awayFromEnemy.opposite();
+        */
+        //towardsEnemy = awayFromEnemy.opposite();//Null
     }
 
     public static MapLocation ArchonCenter(double f, MapLocation a) {

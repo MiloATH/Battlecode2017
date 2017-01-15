@@ -25,23 +25,64 @@ public class BotScout extends RobotPlayer {
                         if (b.getType() == RobotType.ARCHON) {//TODO: only broadcast once
                             rc.broadcast(ENEMY_SEEN_CHANNEL, encodeBroadcastLoc(b.getLocation()));
                         }
-                        if (b.getType() == RobotType.GARDENER) {
+                        else if (b.getType() == RobotType.GARDENER) {
                             nearbyGardener = true;
                             Direction opponent = rc.getLocation().directionTo(b.getLocation());
                             //TODO: Don't run over your own bullets
-                            if (!rc.hasMoved() && rc.canMove(opponent, (float) (b.getLocation().distanceTo(b.getLocation()) - 0.25))) {
-                                rc.move(opponent, (float) (b.getLocation().distanceTo(b.getLocation()) - 0.25));
-                            }
-                            if (rc.canFireSingleShot()) {
+                            float distance = (float) (b.getLocation().distanceTo(rc.getLocation()) - 0.25);
+                            distance = distance < 0 ? 0 : distance;
+                            if (distance < 2.5 && rc.canFireSingleShot()) {
                                 rc.fireSingleShot(opponent);
                                 if (rc.readBroadcast(ENEMY_GARDENER_SEEN_CHANNEL) == 0) {
                                     rc.broadcast(ENEMY_GARDENER_SEEN_CHANNEL, encodeBroadcastLoc(b.getLocation()));
                                 }
                                 break;
+                            } else if (!rc.hasMoved() && !rc.hasAttacked() && rc.canMove(opponent, distance)) {
+                                System.out.println("MOVING " + (distance) + " in direction " + opponent.toString());
+                                rc.move(opponent, distance);
+                            }
+                        }
+                        else if (b.getType() == RobotType.SOLDIER) {
+                            nearbyGardener = true;
+                            Direction opponent = rc.getLocation().directionTo(b.getLocation());
+                            //TODO: Don't run over your own bullets
+                            float distance = (float) (b.getLocation().distanceTo(rc.getLocation()) - 0.25);
+                            distance = distance < 0 ? 0 : distance;
+                            if (distance < 6 && rc.canFireSingleShot()) {
+                                rc.fireSingleShot(opponent);
+                                if (rc.readBroadcast(ENEMY_GARDENER_SEEN_CHANNEL) == 0) {
+                                    rc.broadcast(ENEMY_GARDENER_SEEN_CHANNEL, encodeBroadcastLoc(b.getLocation()));
+                                }
+                                break;
+                            } else if (!rc.hasMoved() && !rc.hasAttacked() && rc.canMove(opponent, distance)) {
+                                System.out.println("MOVING " + (distance) + " in direction " + opponent.toString());
+                                rc.move(opponent, distance);
+                            }
+                        }
+                        else if (b.getType() == RobotType.LUMBERJACK) {
+                            nearbyGardener = true;
+                            Direction opponent = rc.getLocation().directionTo(b.getLocation());
+                            //TODO: Don't run over your own bullets
+                            float distance = (float) (b.getLocation().distanceTo(rc.getLocation()) - 0.25);
+                            distance = distance < 0 ? 0 : distance;
+                            if (distance < 7 && rc.canFireSingleShot()) {
+                                rc.fireSingleShot(opponent);
+                                if (rc.readBroadcast(ENEMY_GARDENER_SEEN_CHANNEL) == 0) {
+                                    rc.broadcast(ENEMY_GARDENER_SEEN_CHANNEL, encodeBroadcastLoc(b.getLocation()));
+                                }
+                                break;
+                            } else if (distance > 10 && !rc.hasMoved() && !rc.hasAttacked() && rc.canMove(opponent, distance)) {
+                                System.out.println("MOVING " + (distance) + " in direction " + opponent.toString());
+                                rc.move(opponent, distance);
+                            }
+                            if (distance < 3 && !rc.hasMoved() && !rc.hasAttacked() && rc.canMove(opponent.opposite(), distance)) {
+                                System.out.println("MOVING " + (distance) + " in direction " + opponent.opposite().toString());
+                                rc.move(opponent.opposite(), distance);
                             }
                         }
                     }
                 }
+
                 //Didn't move
                 if (!rc.hasMoved()) {
                     MapLocation loc = decodeBroadcastLoc(rc.readBroadcast(ENEMY_GARDENER_SEEN_CHANNEL));
@@ -57,10 +98,9 @@ public class BotScout extends RobotPlayer {
                     }
                 }
                 roundNum = rc.getRoundNum();
-                if(roundNum<ROUND_TO_BROADCAST_TREE_DENSITY) {
+                if (roundNum < ROUND_TO_BROADCAST_TREE_DENSITY) {
                     updateTreeCount();
-                }
-                else if (roundNum == ROUND_TO_BROADCAST_TREE_DENSITY) {
+                } else if (roundNum == ROUND_TO_BROADCAST_TREE_DENSITY) {
                     broadcastTreeDensity();
                 }
                 Clock.yield();
@@ -68,6 +108,7 @@ public class BotScout extends RobotPlayer {
                 e.printStackTrace();
             }
         }
+
     }
 
     public static void scoutWander() throws GameActionException {
@@ -106,7 +147,7 @@ public class BotScout extends RobotPlayer {
     public static void broadcastTreeDensity() throws GameActionException {
         double treeDensity = treeCount / numberOfRoundsAlive;
         //System.out.println("DENSITY OF TREES: " + treeDensity);
-        rc.broadcast(TREE_DENSITY_CHANNEL,(int) treeDensity);
+        rc.broadcast(TREE_DENSITY_CHANNEL, (int) treeDensity);
         /*
                 NOTE: Density is based on life of scout, NOT ACCOUNTED FOR SIZE OF MAP. NOT REALLY DENSITY!
                 //TODO: divide by actual map size or distance covered, not round number.
