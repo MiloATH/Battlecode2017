@@ -10,6 +10,7 @@ public strictfp class RobotPlayer extends Globals {
     @SuppressWarnings("unused")
     // Keep broadcast channels
     static int GARDENER_CHANNEL = 50;
+    static int GARDENER_LOOKING_FOR_PLANTING = 55;
     static int LUMBERJACK_CHANNEL = 60;
     static int SCOUTS_CHANNEL = 70;
     static int TREE_CHANNEL = 80;
@@ -19,9 +20,13 @@ public strictfp class RobotPlayer extends Globals {
     static int TREE_DENSITY_CHANNEL = 120;
     static int GARDENER_UNDER_ATTACK = 130;
     static int ENEMY_SEEN_CHANNEL = 900;
+    static int NEED_LUMBERJACK_FOR_CLEARING = 140;
 
     // Keep important numbers here
-    static int GARDENER_MAX = 15;
+    static int GARDENER_MAX = 30;
+    static int MAX_NUMBER_OF_GARDENER_LOOKING = 5;//Changes by in archon run during early game
+    static int EARLY_GAME = 200;
+    static int MID_GAME = 500;
     static int LUMBERJACK_MAX = 30;
     static int SCOUT_MAX = 20;
     static int SURPLUS_BULLETS = 160;
@@ -29,7 +34,9 @@ public strictfp class RobotPlayer extends Globals {
     static int ROUND_TO_BROADCAST_TREE_DENSITY = 100;
     static int ATTACK_ROUND = 750;
     static int INITIAL_MOVES_BASE = 6;
-    static int MIN_GARDENER_SPACING = 12;
+    static int MIN_GARDENER_SPACING = 10;//12;
+    static float MIN_GARDENER_CLEARING = 2.75f;
+    static int MAX_LUMBERJACK_PATIENCE = 100;
 
     static Direction[] dirList = new Direction[6];
     static Direction goingDir;
@@ -61,9 +68,9 @@ public strictfp class RobotPlayer extends Globals {
     //1:Scout
     //2:Lumberjack
     //3:Soldier
-    static int[] build = {0,1};// {1, 0, 1, 0, 0, 1, 0, 0, 3, 0, 0, 2, 0, 0, 3, 0, 2, 3, 3};
-    static int[] manyLumberjackBuild ={0,1};// {2, 0, 1, 0, 0, 1, 0, 2, 2, 2, 0, 2, 0, 2, 3, 0, 2, 3, 3};
-    static int[] almostAllLumberjackBuild ={0,1};// {2, 0, 2, 0, 2, 1, 0, 2, 2, 0, 2, 2, 0, 2, 2, 0, 2, 2, 3};
+    static int[] build = {3, 1, 0, 1, 0, 0, 1, 0, 0, 3, 0, 0, 2, 0, 0, 3, 0, 2, 3, 3};
+    static int[] manyLumberjackBuild = {3, 0, 1, 0, 0, 1, 0, 2, 2, 2, 0, 2, 0, 2, 3, 0, 2, 3, 3};
+    static int[] almostAllLumberjackBuild = {3, 0, 2, 0, 2, 1, 0, 2, 2, 0, 2, 2, 0, 2, 2, 0, 2, 2, 3};
 
     public static void run(RobotController rc) throws GameActionException {
         // This is the RobotController object. You use it to perform actions from this robot,
@@ -134,6 +141,16 @@ public strictfp class RobotPlayer extends Globals {
         //rc.broadcast(RALLY_LOCATION_CHANNEL, encodeBroadcastLoc(new MapLocation(me.x + 5, me.y + 5)));
         while (true) {
             try {
+                if(rc.getRoundNum() < EARLY_GAME){
+                    MAX_NUMBER_OF_GARDENER_LOOKING = 2;
+                }
+                if(rc.getRoundNum() >=EARLY_GAME && rc.getRoundNum() < MID_GAME){
+                    MAX_NUMBER_OF_GARDENER_LOOKING = 3;
+
+                }
+                if(rc.getRoundNum() >= MID_GAME){
+                    MAX_NUMBER_OF_GARDENER_LOOKING = 5;
+                }
                 victoryPointsEndgameCheck();
                 dodge();
                 //TODO: make it better or remove middleman
@@ -163,10 +180,15 @@ public strictfp class RobotPlayer extends Globals {
                 }
                 //Build gardener if less than max
                 int prevNumGard = rc.readBroadcast(GARDENER_CHANNEL);
-                if (prevNumGard < GARDENER_MAX * rc.getRoundNum() / rc.getRoundLimit() + 1 || rc.getTeamBullets() >= SURPLUS_BULLETS) {
+
+                //Read the current one
+                int numberOfGardenerLooking = rc.readBroadcast(GARDENER_LOOKING_FOR_PLANTING + rc.getRoundNum()% 20 - 1);
+                System.out.println("ARCHON SEES " + numberOfGardenerLooking+ " GARDENERS LOOKING");
+                if (prevNumGard < GARDENER_MAX && numberOfGardenerLooking<MAX_NUMBER_OF_GARDENER_LOOKING) {
                     rc.broadcast(GARDENER_CHANNEL, prevNumGard + tryToBuild(RobotType.GARDENER, RobotType.GARDENER.bulletCost));
                 }
-
+                //Reset the one from a few rounds ago.
+                rc.broadcast(GARDENER_LOOKING_FOR_PLANTING + rc.getRoundNum()%20 - 3,0);//TODO: THIS MAY NOT ALWAYS WORK. COULD BE A PROBLEM
                 //Then wander
                 //retreat();
                 Clock.yield();
@@ -211,17 +233,18 @@ public strictfp class RobotPlayer extends Globals {
                 }
 
                 //Find good place to plant trees
-                int moveUntilRound = 5 * (GARDENER_MAX * rc.getRoundNum() / rc.getRoundLimit() + 1);
+                int moveUntilRound = 10;//5 * (GARDENER_MAX * rc.getRoundNum() / rc.getRoundLimit() + 1);
                 if (numberOfRoundsAlive < moveUntilRound) {
                     wander();
                 }
-                Boolean nearAllyGardeners = false;
-                for (RobotInfo bot : bots) {
-                    if (bot.getTeam() == rc.getTeam() && bot.getType() == RobotType.GARDENER && bot.getLocation().distanceTo(rc.getLocation()) < MIN_GARDENER_SPACING) {
-                        nearAllyGardeners = true;
+                Boolean nearAllyTrees = false;
+                TreeInfo[] nearbyTrees = rc.senseNearbyTrees();
+                for (TreeInfo tree : nearbyTrees) {
+                    if (tree.getTeam() == rc.getTeam() && tree.getLocation().distanceTo(rc.getLocation()) < MIN_GARDENER_SPACING) {//NOTE TREE TO GARDENER spacing
+                        nearAllyTrees = true;
                     }
                 }
-                if (nearAllyGardeners && !startedPlanting) {
+                if (nearAllyTrees && !startedPlanting) {
                     wander();
                 }
 
@@ -240,9 +263,10 @@ public strictfp class RobotPlayer extends Globals {
                 if (buildNum < build.length) {
                     switch (build[buildNum]) {
                         case 0://Tree
-                            /*System.out.println("Started Planting?: " + startedPlanting + "\nNear Ally Gardeners: " + nearAllyGardeners +
-                                    "\n #rounds Alive less than moveUntilRound?: " + (numberOfRoundsAlive < moveUntilRound));*/
-                            if ((startedPlanting || !nearAllyGardeners) &&
+                            //System.out.println("Try to plant");
+                            /*System.out.println("Started Planting?: " + startedPlanting + "\nNear Ally Gardeners: " + nearAllyTrees +
+                                    "\n #rounds Alive more than/equal moveUntilRound?: " + (numberOfRoundsAlive >= moveUntilRound));*/
+                            if ((startedPlanting || !nearAllyTrees) &&
                                     numberOfRoundsAlive >= moveUntilRound &&
                                     (tryToPlant() || rc.getTeamBullets() > 2 * SURPLUS_BULLETS)) {//Short circut evaluation. Only plants after moveUntilRound
                                 rc.broadcast(TREE_CHANNEL, prevTree + 1);
@@ -268,6 +292,9 @@ public strictfp class RobotPlayer extends Globals {
                 //DONT MOVE
                 tryToWater();
                 numberOfRoundsAlive++;
+                if(!startedPlanting){
+                    stillLookingForPlanting();
+                }
                 Clock.yield();
             } catch (Exception e) {
                 e.printStackTrace();
@@ -442,14 +469,30 @@ public strictfp class RobotPlayer extends Globals {
     public static Boolean tryToPlant() throws GameActionException {
         //try to build gardeners
         //can you build a gardener?
-        System.out.println("PLANTING");
+        //System.out.println("PLANTING");
         if (rc.getTeamBullets() > GameConstants.BULLET_TREE_COST) {//have enough bullets. assuming we haven't built already.
             for (int i = 0; i < 6; i++) {
                 if (i != openDirFromList && rc.canPlantTree(dirList[i])) {
                     rc.plantTree(dirList[i]);
                     startedPlanting = true;
                     return true;
+                } else if(treeInWay(rc.senseNearbyTrees(), rc.getLocation().add(dirList[i], MIN_GARDENER_CLEARING))){
+                    rc.broadcast(NEED_LUMBERJACK_FOR_CLEARING, encodeBroadcastLoc(rc.getLocation().add(dirList[i], MIN_GARDENER_CLEARING)));
+                } else{
+                    rc.setIndicatorDot(rc.getLocation().add(dirList[i]) , 255,0, 0   );
                 }
+            }
+        }
+        //System.out.println("RET False");
+        return false;
+    }
+
+    public static Boolean treeInWay(TreeInfo[] trees, MapLocation location){
+        for(TreeInfo t: trees){
+            if(t.getLocation().distanceTo(location) < MIN_GARDENER_CLEARING){
+                System.out.println("REQUEST CLEARING");
+                rc.setIndicatorDot(location, 0,255,0);
+                return true;
             }
         }
         return false;
@@ -594,8 +637,12 @@ public strictfp class RobotPlayer extends Globals {
                     if (rc.canMove(offset) && !rc.hasMoved()) {
                         if (i > 0) {
                             patienceLeft--;
-                            //If lumberjack just stay at it and uct through
-                            if (patienceLeft <= 0 && rc.getType() != RobotType.LUMBERJACK) {
+                            //If lumberjack just stay at it and it will through
+                            if(rc.getType() == RobotType.LUMBERJACK && patienceLeft<=0){
+                                goRight = !goRight;
+                                patienceLeft = MAX_LUMBERJACK_PATIENCE;
+                            }
+                            else if (patienceLeft <= 0 ) {
                                 goRight = !goRight;
                                 patienceLeft = MAX_PATIENCE;
                             }
@@ -626,5 +673,11 @@ public strictfp class RobotPlayer extends Globals {
         }
     }
 
+
+    public static void stillLookingForPlanting() throws GameActionException{// PROBLEM: LATENCE BETWEEN TURNS. TODO
+        int input = rc.readBroadcast(GARDENER_LOOKING_FOR_PLANTING+rc.getRoundNum()% 20);
+        rc.broadcast(GARDENER_LOOKING_FOR_PLANTING+rc.getRoundNum()% 20,input+1);
+        System.out.println("NUMBER OF GARDNERS LOOKING: " + (input+1));
+    }
 
 }

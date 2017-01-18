@@ -10,12 +10,19 @@ public class BotScout extends RobotPlayer {
     public static float MAX_SCOUT_SHOOTING_DISTANCE = 2.5f;
     public static float MAX_SCOUT_TREE_HIDE_FROM_ENEMY = 2.5f;
     public static TreeInfo nextTree = null;
+    public static MapLocation topLeft;
+    public static Boolean scoutMap =false;
 
     public static void loop() throws GameActionException {
         treeCount = 0;
         while (true) {
             try {
                 victoryPointsEndgameCheck();
+                //int numberOfScoutsMade = rc.readBroadcast(SCOUTS_CHANNEL);
+                /*if(numberOfScoutsMade<=5 || scoutMap){
+                    scoutMap = true;
+                    findMapSize();
+                }*/
                 //dodge();//Now dodges after trying to hide in a tree
                 shakeNeighbors();
                 //TODO optimise to not have to use rc.hasMoved()
@@ -296,5 +303,17 @@ public class BotScout extends RobotPlayer {
         return false;
     }
 
+    /*
+    Also broadcast size
+
+    public static void findMapSize() throws GameActionException{
+        if(topLeft==null) {
+            navigateTo(new MapLocation(0, 0));
+        }
+        else {
+            navigateTo(new MapLocation(99999, 99999));
+        }
+        if(!rc.hasMoved())
+    }*/
 
 }

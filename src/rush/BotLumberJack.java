@@ -10,6 +10,7 @@ public class BotLumberJack extends RobotPlayer {
                 victoryPointsEndgameCheck();
                 dodge();
                 rally();
+                lumberjackNeededRally();
                 RobotInfo[] bots = rc.senseNearbyRobots();
                 for (RobotInfo b : bots) {
                     if (b.getTeam() != rc.getTeam() && rc.canStrike()) {
@@ -36,6 +37,13 @@ public class BotLumberJack extends RobotPlayer {
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    public static void lumberjackNeededRally() throws GameActionException{
+        MapLocation location = decodeBroadcastLoc(rc.readBroadcast(NEED_LUMBERJACK_FOR_CLEARING));
+        if(location!=null){
+            navigateTo(location);
         }
     }
 }

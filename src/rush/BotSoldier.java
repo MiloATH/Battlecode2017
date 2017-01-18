@@ -16,6 +16,16 @@ public class BotSoldier extends RobotPlayer{
                 dodge();
                 rally();
                 shakeNeighbors();
+                if(rc.getRoundNum()<EARLY_GAME){//stay near gardeners at start
+                    RobotInfo[] bots = rc.senseNearbyRobots();
+                    for(RobotInfo b: bots){
+                        if(b.getTeam()==rc.getTeam() && b.getType()==RobotType.GARDENER){
+                            if(b.getLocation().distanceTo(rc.getLocation()) > 10){
+                                navigateTo(b.getLocation());
+                            }
+                        }
+                    }
+                }
                 MapLocation myLocation = rc.getLocation();
                 // See if there are any nearby enemy robots
                 RobotInfo[] robots = rc.senseNearbyRobots(-1, enemy);
