@@ -246,8 +246,8 @@ public strictfp class RobotPlayer extends Globals {
 
     //TODO: Put in loop of each bot
     public static void shakeNeighbors() throws GameActionException {
-        TreeInfo[] trees = rc.senseNearbyTrees();
-        for (TreeInfo t : trees) {
+        senseNearbyTrees = rc.senseNearbyTrees();
+        for (TreeInfo t : senseNearbyTrees) {
             tryToShake(t);
         }
     }
@@ -546,7 +546,10 @@ public strictfp class RobotPlayer extends Globals {
         }
 
     }
-
+    /*
+        Navigates to location loc.
+     */
+    //TODO: Have it also only move if there isn't a bullet. Or maybe minimize number of bullets it has to take.
     public static void navigateTo(MapLocation loc) throws GameActionException {
         goingDir = rc.getLocation().directionTo(loc);
         if (!rc.hasMoved()) {

@@ -2,47 +2,104 @@ package rush;
 
 import battlecode.common.*;
 
-
 public class BotScout extends RobotPlayer {
 
     public static Boolean nearbyGardener;
-    public static TreeInfo[] previousTrees = {};
     public static int treeCount;
+    public static Boolean stayInPlace = false;
+    public static float MAX_SCOUT_SHOOTING_DISTANCE = 2.5f;
+    public static float MAX_SCOUT_TREE_HIDE_FROM_ENEMY = 2.5f;
+    public static TreeInfo nextTree = null;
 
     public static void loop() throws GameActionException {
         treeCount = 0;
         while (true) {
             try {
                 victoryPointsEndgameCheck();
-                dodge();
+                //dodge();//Now dodges after trying to hide in a tree
                 shakeNeighbors();
                 //TODO optimise to not have to use rc.hasMoved()
                 //Attack other team's gardeners only
+                if(!rc.isLocationOccupiedByTree(rc.getLocation())){
+                    stayInPlace = false;
+                }
                 RobotInfo[] bots = rc.senseNearbyRobots();
                 nearbyGardener = false;
+                System.out.println(bots.length + " ROBOTS SEEN");
                 for (RobotInfo b : bots) {
                     if (b.getTeam() != rc.getTeam()) {
+                        //System.out.println("ENEMY SEEN");
                         if (b.getType() == RobotType.ARCHON) {//TODO: only broadcast once
                             rc.broadcast(ENEMY_SEEN_CHANNEL, encodeBroadcastLoc(b.getLocation()));
-                        }
-                        else if (b.getType() == RobotType.GARDENER) {
+                        } else if (b.getType() == RobotType.GARDENER) {
+                            //System.out.println("ENEMY GARDENER SEEN");
                             nearbyGardener = true;
                             Direction opponent = rc.getLocation().directionTo(b.getLocation());
-                            //TODO: Don't run over your own bullets
+                            //TODO: Don't run over your own bullets. Right now just doesn't move when fired (1/17/2017).
                             float distance = (float) (b.getLocation().distanceTo(rc.getLocation()) - 0.25);
                             distance = distance < 0 ? 0 : distance;
-                            if (distance < 2.5 && rc.canFireSingleShot()) {
+                            if (distance < MAX_SCOUT_SHOOTING_DISTANCE && rc.canFireSingleShot()) {
+                                //System.out.println("FIRING");
                                 rc.fireSingleShot(opponent);
                                 if (rc.readBroadcast(ENEMY_GARDENER_SEEN_CHANNEL) == 0) {
                                     rc.broadcast(ENEMY_GARDENER_SEEN_CHANNEL, encodeBroadcastLoc(b.getLocation()));
                                 }
                                 break;
-                            } else if (!rc.hasMoved() && !rc.hasAttacked() && rc.canMove(opponent, distance)) {
-                                System.out.println("MOVING " + (distance) + " in direction " + opponent.toString());
-                                rc.move(opponent, distance);
+                            } else if (!stayInPlace && !rc.hasMoved() && !rc.hasAttacked()) {
+                                //System.out.println("MOVING " + (distance) + " in direction " + opponent.toString());
+                                if (nextTree == null) {//Find tree
+                                    nextTree = treeHideNavigateTo(b.getLocation(), senseNearbyTrees);
+                                }
+                                if (nextTree != null) {//If still null then there aren't any trees found by treeHideNavigateTo()
+                                    /*
+                                    TODO: configure nextTree so it goes to the tree
+                                     */
+                                    //Check if already at best location
+                                    MapLocation me = rc.getLocation();
+                                    if(nextTree.getLocation().x - me.x < 0.001 && nextTree.getLocation().y - me.y < 0.001){
+                                        if(!rc.hasMoved() && rc.canMove(nextTree.getLocation())){//Just to be centered.
+                                            rc.move(nextTree.getLocation());
+                                        }
+                                        nextTree = null;
+                                        System.out.println("AT TREE ALREADY " + nextTree.toString());
+                                        if(distance < MAX_SCOUT_TREE_HIDE_FROM_ENEMY){
+                                            stayInPlace = true;
+                                            System.out.println("Check before moving: STAY IN PLACE");
+                                        }
+                                    }
+                                    else {
+                                        rc.setIndicatorDot(nextTree.getLocation(), 255, 0, 0);
+                                        MapLocation bestTreeLoc = nextTree.getLocation();
+                                        rc.setIndicatorLine(rc.getLocation(), bestTreeLoc, 255, 0, 0);
+                                        MapLocation meNow = rc.getLocation();
+                                        if (stepOnToLocation(bestTreeLoc)) {
+                                            System.out.println("MOVING TO Best Tree: " + bestTreeLoc.toString());
+                                            meNow = bestTreeLoc;
+                                        } else {
+                                            System.out.println("NAVING TO " + bestTreeLoc.toString());
+                                            navigateTo(bestTreeLoc);
+                                            meNow = rc.getLocation().add(goingDir, rc.getType().strideRadius);
+                                        }
+                                        distance = meNow.distanceTo(b.getLocation());
+                                        System.out.println("My Location: " + meNow.toString());
+                                        System.out.println("x: " + (bestTreeLoc.x - meNow.x) + " y: " + (bestTreeLoc.y - meNow.y) + " d: " + distance);
+                                        if (bestTreeLoc.x - meNow.x < 0.001 && bestTreeLoc.y - meNow.y < 0.001) {
+                                            nextTree = null;
+                                            System.out.println("x: " + (bestTreeLoc.x - meNow.x) + " y: " + (bestTreeLoc.y - meNow.y) + " d: " + distance + " FIND NEXT TREE");
+                                            System.out.println("Distance: " + distance + " d less than max?: " + (distance < MAX_SCOUT_TREE_HIDE_FROM_ENEMY));
+                                            if (distance < MAX_SCOUT_TREE_HIDE_FROM_ENEMY) {
+                                                stayInPlace = true;
+                                                System.out.println("x: " + (bestTreeLoc.x - meNow.x) + " y: " + (bestTreeLoc.y - meNow.y) + " d: " + distance + " STAY IN PLACE");
+                                            }
+                                        }
+                                    }
+                                } else if (rc.canMove(opponent, distance)) {
+                                    System.out.println("Moving by direction oppoennt");
+                                    rc.move(opponent, distance);
+                                }
                             }
                         }
-                        else if (b.getType() == RobotType.SOLDIER) {
+                        /*else if (b.getType() == RobotType.SOLDIER) {
                             nearbyGardener = true;
                             Direction opponent = rc.getLocation().directionTo(b.getLocation());
                             //TODO: Don't run over your own bullets
@@ -79,12 +136,18 @@ public class BotScout extends RobotPlayer {
                                 System.out.println("MOVING " + (distance) + " in direction " + opponent.opposite().toString());
                                 rc.move(opponent.opposite(), distance);
                             }
-                        }
+                        }*/
                     }
                 }
-
+                if(!nearbyGardener){
+                    stayInPlace = false;
+                }
+                //Try to dodge
+                if (!stayInPlace && !rc.hasMoved()) {
+                    dodge();
+                }
                 //Didn't move
-                if (!rc.hasMoved()) {
+                if (!stayInPlace && !rc.hasMoved()) {
                     MapLocation loc = decodeBroadcastLoc(rc.readBroadcast(ENEMY_GARDENER_SEEN_CHANNEL));
                     MapLocation me = rc.getLocation();
                     //If within sight (real sight is 10) of location, there are no nearby enemy gardeners and hasn't attacked
@@ -92,6 +155,7 @@ public class BotScout extends RobotPlayer {
                         rc.broadcast(ENEMY_GARDENER_SEEN_CHANNEL, 0);
                     }
                     if (loc != null && rc.canMove(loc)) {//Go to seen gardener
+                        System.out.println("GOTO SEEN GARDENER");
                         rc.move(loc);
                     } else {//wander
                         scoutWander();
@@ -115,6 +179,7 @@ public class BotScout extends RobotPlayer {
 
         //TODO: early game check location of opponent archons. get location of opponent archons with symmetry of our archons
         try {
+            System.out.println("WANDER");
             if (!rc.hasMoved()) {
                 while (Clock.getBytecodesLeft() > 100) {
                     if (rc.canMove(goingDir) && !rc.hasMoved()) {
@@ -170,5 +235,38 @@ public class BotScout extends RobotPlayer {
                 --------------------
                 Shrine      |   ~1, <2
                  */
+    }
+
+    /*
+        Navigate towards loc by hiding in trees.
+        NOTE: shakeNeighbors() has to have been called.
+     */
+    public static TreeInfo treeHideNavigateTo(MapLocation loc, TreeInfo[] trees) throws GameActionException {
+        MapLocation me = rc.getLocation();
+        TreeInfo bestHidingTree = null;
+        float bestHidingTreeDistanceToMe = -1f; //Note: max distance on a 100x100 map is 100. May be subject to change
+        float distanceToLoc = me.distanceTo(loc);
+        //Find trees that decreases the distance
+        for (TreeInfo t : trees) {
+            MapLocation treeLoc = t.getLocation();
+            if (treeLoc.distanceTo(loc) < distanceToLoc - 2.5) {
+                //Find the one that is minimum distance away from me.
+                float distanceToMe = treeLoc.distanceTo(me);
+                if (bestHidingTreeDistanceToMe == -1 || distanceToMe < bestHidingTreeDistanceToMe) {
+                    bestHidingTreeDistanceToMe = distanceToMe;
+                    bestHidingTree = t;
+                }
+            }
+        }
+        return bestHidingTree;
+    }
+
+    public static Boolean stepOnToLocation(MapLocation loc) throws GameActionException{
+        if(rc.canMove(loc) && rc.getLocation().distanceTo(loc) <= rc.getType().strideRadius){
+            System.out.println("STEP ON LOCATION");
+            rc.move(loc);
+            return true;
+        }
+        return false;
     }
 }
