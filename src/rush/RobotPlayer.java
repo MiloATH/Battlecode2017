@@ -29,6 +29,7 @@ public strictfp class RobotPlayer extends Globals {
     static int ROUND_TO_BROADCAST_TREE_DENSITY = 100;
     static int ATTACK_ROUND = 750;
     static int INITIAL_MOVES_BASE = 6;
+    static int MIN_GARDENER_SPACING = 12;
 
     static Direction[] dirList = new Direction[6];
     static Direction goingDir;
@@ -38,7 +39,7 @@ public strictfp class RobotPlayer extends Globals {
     static int numberOfRoundsAlive;
     static Boolean goRight = true;//True means go right. False means go left.
     static int patienceLeft = MAX_PATIENCE;
-
+    static Boolean startedPlanting = false;
 
 
     static TreeInfo[] senseNearbyTrees;
@@ -60,9 +61,9 @@ public strictfp class RobotPlayer extends Globals {
     //1:Scout
     //2:Lumberjack
     //3:Soldier
-    static int[] build = {1, 0, 1, 0, 0, 1, 0, 0, 3, 0, 0, 2, 0, 0, 3, 0, 2, 3, 3};
-    static int[] manyLumberjackBuild = {2, 0, 1, 0, 0, 1, 0, 2, 2, 2, 0, 2, 0, 2, 3, 0, 2, 3, 3};
-    static int[] almostAllLumberjackBuild = {2, 0, 2, 0, 2, 1, 0, 2, 2, 0, 2, 2, 0, 2, 2, 0, 2, 2, 3};
+    static int[] build = {0,1};// {1, 0, 1, 0, 0, 1, 0, 0, 3, 0, 0, 2, 0, 0, 3, 0, 2, 3, 3};
+    static int[] manyLumberjackBuild ={0,1};// {2, 0, 1, 0, 0, 1, 0, 2, 2, 2, 0, 2, 0, 2, 3, 0, 2, 3, 3};
+    static int[] almostAllLumberjackBuild ={0,1};// {2, 0, 2, 0, 2, 1, 0, 2, 2, 0, 2, 2, 0, 2, 2, 0, 2, 2, 3};
 
     public static void run(RobotController rc) throws GameActionException {
         // This is the RobotController object. You use it to perform actions from this robot,
@@ -148,10 +149,9 @@ public strictfp class RobotPlayer extends Globals {
                         ATTACK_ROUND = 1250;
                     }
                 }
-                if(gardenerUnderAttack!=0){
+                if (gardenerUnderAttack != 0) {
                     rc.broadcast(RALLY_LOCATION_CHANNEL, gardenerUnderAttack);
-                }
-                else if (enemySeen != 0) {
+                } else if (enemySeen != 0) {
                     if (rc.getRoundNum() > ATTACK_ROUND) {//ATTACK
                         rc.broadcast(RALLY_LOCATION_CHANNEL, enemySeen);
                     } else {
@@ -177,7 +177,7 @@ public strictfp class RobotPlayer extends Globals {
     }
 
     static void runGardener() throws GameActionException {
-        if(rc.getRoundNum() == 1) {
+        if (rc.getRoundNum() == 1) {
             hasHome = false;
         }
 
@@ -194,7 +194,10 @@ public strictfp class RobotPlayer extends Globals {
         while (true) {
             try {
                 victoryPointsEndgameCheck();
-                dodge();
+                if (!startedPlanting) {
+                    dodge();
+                }
+                RobotInfo[] bots = rc.senseNearbyRobots();
                 //TODO: Make tree density more general
                 if (rc.getRoundNum() == ROUND_TO_BROADCAST_TREE_DENSITY + 1) {
                     int treeDensity = rc.readBroadcast(TREE_DENSITY_CHANNEL);
@@ -206,16 +209,26 @@ public strictfp class RobotPlayer extends Globals {
                         build = almostAllLumberjackBuild;
                     }
                 }
-                int moveUntilRound = INITIAL_MOVES_BASE + 5 * (GARDENER_MAX * rc.getRoundNum() / rc.getRoundLimit() + 1);
+
+                //Find good place to plant trees
+                int moveUntilRound = 5 * (GARDENER_MAX * rc.getRoundNum() / rc.getRoundLimit() + 1);
                 if (numberOfRoundsAlive < moveUntilRound) {
+                    wander();
+                }
+                Boolean nearAllyGardeners = false;
+                for (RobotInfo bot : bots) {
+                    if (bot.getTeam() == rc.getTeam() && bot.getType() == RobotType.GARDENER && bot.getLocation().distanceTo(rc.getLocation()) < MIN_GARDENER_SPACING) {
+                        nearAllyGardeners = true;
+                    }
+                }
+                if (nearAllyGardeners && !startedPlanting) {
                     wander();
                 }
 
                 //Check if under attack
-                RobotInfo[] bots = rc.senseNearbyRobots();
-                for(RobotInfo bot:bots){
-                    if(bot.getTeam()!=rc.getTeam()){
-                        rc.broadcast(GARDENER_UNDER_ATTACK,encodeBroadcastLoc(rc.getLocation()));
+                for (RobotInfo bot : bots) {
+                    if (bot.getTeam() != rc.getTeam()) {
+                        rc.broadcast(GARDENER_UNDER_ATTACK, encodeBroadcastLoc(rc.getLocation()));
                     }
                 }
 
@@ -227,7 +240,11 @@ public strictfp class RobotPlayer extends Globals {
                 if (buildNum < build.length) {
                     switch (build[buildNum]) {
                         case 0://Tree
-                            if (numberOfRoundsAlive > moveUntilRound && (tryToPlant() || rc.getTeamBullets() > 2 * SURPLUS_BULLETS)) {//Short circut evaluation. Only plants after moveUntilRound
+                            /*System.out.println("Started Planting?: " + startedPlanting + "\nNear Ally Gardeners: " + nearAllyGardeners +
+                                    "\n #rounds Alive less than moveUntilRound?: " + (numberOfRoundsAlive < moveUntilRound));*/
+                            if ((startedPlanting || !nearAllyGardeners) &&
+                                    numberOfRoundsAlive >= moveUntilRound &&
+                                    (tryToPlant() || rc.getTeamBullets() > 2 * SURPLUS_BULLETS)) {//Short circut evaluation. Only plants after moveUntilRound
                                 rc.broadcast(TREE_CHANNEL, prevTree + 1);
                             }
                             break;
@@ -268,35 +285,35 @@ public strictfp class RobotPlayer extends Globals {
 
     //static void startForesting() throws GameActionException {
 
-        //senseNearbyTrees = rc.senseNearbyTrees(2, friendly);
-        //senseAllTrees = rc.senseNearbyTrees(6, friendly);
-        //if (tryToWater() == treeMovingTo) {
-            //targetCurrentHealth = 1000;
-        //}
-        //if (senseNearbyTrees.length == 0 && rc.canPlantTree(towardsEnemy)) {
-            //rc.plantTree(awayFromEnemy);
-        //}
-        //if (senseAllTrees.length != 0 && targetCurrentHealth == 1000) {
-            //for (int i = 0; i <= senseNearbyTrees.length; i++) {
-                //float checkedHealth = senseNearbyTrees[i].getHealth();
-                //if (checkedHealth < acceptableMissingTreeHealth && checkedHealth < targetCurrentHealth) {
-                   // targetCurrentHealth = senseNearbyTrees[i].getHealth();
-                    //treeMovingTo = senseNearbyTrees[i].getID();
-                //}
-            //}
-        //}
+    //senseNearbyTrees = rc.senseNearbyTrees(2, friendly);
+    //senseAllTrees = rc.senseNearbyTrees(6, friendly);
+    //if (tryToWater() == treeMovingTo) {
+    //targetCurrentHealth = 1000;
+    //}
+    //if (senseNearbyTrees.length == 0 && rc.canPlantTree(towardsEnemy)) {
+    //rc.plantTree(awayFromEnemy);
+    //}
+    //if (senseAllTrees.length != 0 && targetCurrentHealth == 1000) {
+    //for (int i = 0; i <= senseNearbyTrees.length; i++) {
+    //float checkedHealth = senseNearbyTrees[i].getHealth();
+    //if (checkedHealth < acceptableMissingTreeHealth && checkedHealth < targetCurrentHealth) {
+    // targetCurrentHealth = senseNearbyTrees[i].getHealth();
+    //treeMovingTo = senseNearbyTrees[i].getID();
+    //}
+    //}
+    //}
 
-        //if (senseAllTrees != null) {
-            //directionToTarget = rc.getLocation().directionTo(senseNearbyTrees[treeMovingTo].getLocation());
-        //}
-        //if (rc.canMove(directionToTarget)) {
-            //rc.move(directionToTarget);
-        //} else if (rc.canMove(directionToTarget.rotateLeftDegrees(45))) {
-            //rc.move(directionToTarget.rotateLeftDegrees(45));
-        //} else if (rc.canMove(directionToTarget.rotateRightDegrees(90))) {
-            //rc.move(directionToTarget.rotateRightDegrees(90));
-        //}
-        //Clock.yield();
+    //if (senseAllTrees != null) {
+    //directionToTarget = rc.getLocation().directionTo(senseNearbyTrees[treeMovingTo].getLocation());
+    //}
+    //if (rc.canMove(directionToTarget)) {
+    //rc.move(directionToTarget);
+    //} else if (rc.canMove(directionToTarget.rotateLeftDegrees(45))) {
+    //rc.move(directionToTarget.rotateLeftDegrees(45));
+    //} else if (rc.canMove(directionToTarget.rotateRightDegrees(90))) {
+    //rc.move(directionToTarget.rotateRightDegrees(90));
+    //}
+    //Clock.yield();
     //}
 
     public static void tryToShake(TreeInfo t) throws GameActionException {
@@ -425,11 +442,12 @@ public strictfp class RobotPlayer extends Globals {
     public static Boolean tryToPlant() throws GameActionException {
         //try to build gardeners
         //can you build a gardener?
-
+        System.out.println("PLANTING");
         if (rc.getTeamBullets() > GameConstants.BULLET_TREE_COST) {//have enough bullets. assuming we haven't built already.
             for (int i = 0; i < 6; i++) {
                 if (i != openDirFromList && rc.canPlantTree(dirList[i])) {
                     rc.plantTree(dirList[i]);
+                    startedPlanting = true;
                     return true;
                 }
             }
@@ -533,7 +551,8 @@ public strictfp class RobotPlayer extends Globals {
 
             // A move never happened, so return false.
 
-        } return false;
+        }
+        return false;
     }
 
     static boolean trySidestep(BulletInfo bullet) throws GameActionException {
@@ -560,6 +579,7 @@ public strictfp class RobotPlayer extends Globals {
         }
 
     }
+
     /*
         Navigates to location loc.
      */
