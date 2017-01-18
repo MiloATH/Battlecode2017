@@ -17,6 +17,7 @@ public strictfp class RobotPlayer extends Globals {
     static int ENEMY_GARDENER_SEEN_CHANNEL = 100;
     static int RALLY_LOCATION_CHANNEL = 110;
     static int TREE_DENSITY_CHANNEL = 120;
+    static int GARDENER_UNDER_ATTACK = 130;
     static int ENEMY_SEEN_CHANNEL = 900;
 
     // Keep important numbers here
@@ -137,6 +138,7 @@ public strictfp class RobotPlayer extends Globals {
                 //TODO: make it better or remove middleman
                 //Set rally point if enemy seen and above a round #
                 int enemySeen = rc.readBroadcast(ENEMY_SEEN_CHANNEL);
+                int gardenerUnderAttack = rc.readBroadcast(GARDENER_UNDER_ATTACK);
                 if (rc.getRoundNum() == ROUND_TO_BROADCAST_TREE_DENSITY + 1) {
                     int treeDensity = rc.readBroadcast(TREE_DENSITY_CHANNEL);
                     if (treeDensity > 30) {
@@ -146,7 +148,10 @@ public strictfp class RobotPlayer extends Globals {
                         ATTACK_ROUND = 1250;
                     }
                 }
-                if (enemySeen != 0) {
+                if(gardenerUnderAttack!=0){
+                    rc.broadcast(RALLY_LOCATION_CHANNEL, gardenerUnderAttack);
+                }
+                else if (enemySeen != 0) {
                     if (rc.getRoundNum() > ATTACK_ROUND) {//ATTACK
                         rc.broadcast(RALLY_LOCATION_CHANNEL, enemySeen);
                     } else {
@@ -205,6 +210,15 @@ public strictfp class RobotPlayer extends Globals {
                 if (numberOfRoundsAlive < moveUntilRound) {
                     wander();
                 }
+
+                //Check if under attack
+                RobotInfo[] bots = rc.senseNearbyRobots();
+                for(RobotInfo bot:bots){
+                    if(bot.getTeam()!=rc.getTeam()){
+                        rc.broadcast(GARDENER_UNDER_ATTACK,encodeBroadcastLoc(rc.getLocation()));
+                    }
+                }
+
                 int prevLum = rc.readBroadcast(LUMBERJACK_CHANNEL);
                 int prevScouts = rc.readBroadcast(SCOUTS_CHANNEL);
                 int prevTree = rc.readBroadcast(TREE_CHANNEL);

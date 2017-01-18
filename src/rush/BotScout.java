@@ -146,7 +146,7 @@ public class BotScout extends RobotPlayer {
                 //ATTACK OTHER UNITS EXCEPT ARCHONS
                 if (!rc.hasAttacked() && rc.canFireSingleShot() && bots.length > 0) {
                     for (RobotInfo bot : bots) {
-                        if (bot.getType() != RobotType.ARCHON) {
+                        if (bot.getTeam() != rc.getTeam() && bot.getType() != RobotType.ARCHON) {
                             rc.fireSingleShot(rc.getLocation().directionTo(bot.getLocation()));
                             break;
                         }
