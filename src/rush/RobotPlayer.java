@@ -7,7 +7,6 @@ import java.util.*;
 public strictfp class RobotPlayer extends Globals {
     static RobotController rc;
     static Random myRand;
-    @SuppressWarnings("unused")
     // Keep broadcast channels
     static int GARDENER_CHANNEL = 50;
     static int GARDENER_LOOKING_FOR_PLANTING = 55;

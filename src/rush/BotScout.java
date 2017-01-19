@@ -7,9 +7,10 @@ public class BotScout extends RobotPlayer {
     public static Boolean nearbyGardener;
     public static int treeCount;
     public static Boolean stayInPlace = false;
-    public static float MAX_SCOUT_SHOOTING_DISTANCE = 2.5f;
-    public static float MAX_SCOUT_TREE_HIDE_FROM_ENEMY = 2.5f;
+    public static float MAX_SCOUT_SHOOTING_DISTANCE = 2f;
+    public static float MAX_SCOUT_TREE_HIDE_FROM_ENEMY = 0;//2.5f;
     public static TreeInfo nextTree = null;
+    public static TreeInfo previousTree = null;
     public static MapLocation topLeft;
     public static Boolean scoutMap =false;
 
@@ -34,6 +35,7 @@ public class BotScout extends RobotPlayer {
                 nearbyGardener = false;
                 //System.out.println(bots.length + " ROBOTS SEEN");
                 if (bots.length == 0) {
+                    previousTree = nextTree;
                     nextTree = null;
                     stayInPlace = false;
                 }
@@ -43,24 +45,27 @@ public class BotScout extends RobotPlayer {
                         if (b.getType() == RobotType.ARCHON) {//TODO: only broadcast once
                             rc.broadcast(ENEMY_SEEN_CHANNEL, encodeBroadcastLoc(b.getLocation()));
                         } else if (b.getType() == RobotType.GARDENER) {
-                            ////System.out.println("ENEMY GARDENER SEEN");
+                            System.out.println("ENEMY GARDENER SEEN");
                             nearbyGardener = true;
                             Direction opponent = rc.getLocation().directionTo(b.getLocation());
-                            //TODO: Don't run over your own bullets. Right now just doesn't move when fired (1/17/2017).
-                            float distance = (float) (b.getLocation().distanceTo(rc.getLocation()) - 0.25);
+                            float distance = (float) (b.getLocation().distanceTo(rc.getLocation()));
                             distance = distance < 0 ? 0 : distance;
                             if (distance < MAX_SCOUT_SHOOTING_DISTANCE && rc.canFireSingleShot()) {
-                                //System.out.println("FIRING");
+                                System.out.println("FIRING");
                                 rc.fireSingleShot(opponent);
                                 if (rc.readBroadcast(ENEMY_GARDENER_SEEN_CHANNEL) == 0) {
                                     rc.broadcast(ENEMY_GARDENER_SEEN_CHANNEL, encodeBroadcastLoc(b.getLocation()));
                                 }
-                                break;
-                            } else if (!stayInPlace && !rc.hasMoved() && !rc.hasAttacked()) {
+                            }
+                            System.out.println("Stay in place???: " + stayInPlace);
+                            if (!stayInPlace && !rc.hasMoved()) {
+                                //TODO: Don't run over your own bullets.
                                 ////System.out.println("MOVING " + (distance) + " in direction " + opponent.toString());
                                 if (nextTree == null) {//Find tree
+                                    System.out.println("NEXT TREE IS NULL");
                                     nextTree = treeHideNavigateTo(b.getLocation(), senseNearbyTrees, bots);
                                 }
+                                System.out.println("NEXT TREE IS " + (nextTree==null ? "null": nextTree.toString()));
                                 if (nextTree != null) {//If still null then there aren't any trees found by treeHideNavigateTo()
                                     /*
                                     TODO: configure nextTree so it goes to the tree
@@ -68,14 +73,16 @@ public class BotScout extends RobotPlayer {
                                     //Check if already at best location
                                     MapLocation me = rc.getLocation();
                                     if (nextTree.getLocation().x - me.x < 0.001 && nextTree.getLocation().y - me.y < 0.001) {
-                                        if (!rc.hasMoved() && rc.canMove(nextTree.getLocation())) {//Just to be centered.
+                                        System.out.println("NEAR nextTree");
+                                        if (!rc.hasMoved() && rc.canMove(nextTree.getLocation())) {
                                             rc.move(nextTree.getLocation());
                                         }
+                                        previousTree = nextTree;
                                         nextTree = null;
-                                        //System.out.println("AT TREE ALREADY " + nextTree.toString());
-                                        if (distance < MAX_SCOUT_TREE_HIDE_FROM_ENEMY) {
+                                        if (distance <= MAX_SCOUT_TREE_HIDE_FROM_ENEMY) {
+                                            System.out.println("Distance from enemy: " + distance);
                                             stayInPlace = true;
-                                            //System.out.println("Check before moving: STAY IN PLACE");
+                                            System.out.println("Check before moving: STAY IN PLACE");
                                         }
                                     } else {
                                         rc.setIndicatorDot(nextTree.getLocation(), 255, 0, 0);
@@ -83,10 +90,10 @@ public class BotScout extends RobotPlayer {
                                         rc.setIndicatorLine(rc.getLocation(), bestTreeLoc, 255, 0, 0);
                                         MapLocation meNow = rc.getLocation();
                                         if (stepOnToLocation(bestTreeLoc)) {
-                                            //System.out.println("MOVING TO Best Tree: " + bestTreeLoc.toString());
+                                            System.out.println("MOVING TO Best Tree: " + bestTreeLoc.toString());
                                             meNow = bestTreeLoc;
                                         } else {
-                                            //System.out.println("NAVING TO " + bestTreeLoc.toString());
+                                            System.out.println("NAVING TO " + bestTreeLoc.toString());
                                             navigateTo(bestTreeLoc);
                                             meNow = rc.getLocation().add(goingDir, rc.getType().strideRadius);
                                         }
@@ -94,17 +101,20 @@ public class BotScout extends RobotPlayer {
                                         //System.out.println("My Location: " + meNow.toString());
                                         //System.out.println("x: " + (bestTreeLoc.x - meNow.x) + " y: " + (bestTreeLoc.y - meNow.y) + " d: " + distance);
                                         if (bestTreeLoc.x - meNow.x < 0.001 && bestTreeLoc.y - meNow.y < 0.001) {
+                                            previousTree = nextTree;
                                             nextTree = null;
                                             //System.out.println("x: " + (bestTreeLoc.x - meNow.x) + " y: " + (bestTreeLoc.y - meNow.y) + " d: " + distance + " FIND NEXT TREE");
                                             //System.out.println("Distance: " + distance + " d less than max?: " + (distance < MAX_SCOUT_TREE_HIDE_FROM_ENEMY));
-                                            if (distance < MAX_SCOUT_TREE_HIDE_FROM_ENEMY) {
+                                            if (distance <= MAX_SCOUT_TREE_HIDE_FROM_ENEMY) {
+                                                System.out.println("Distance from enemy: " + distance);
                                                 stayInPlace = true;
                                                 //System.out.println("x: " + (bestTreeLoc.x - meNow.x) + " y: " + (bestTreeLoc.y - meNow.y) + " d: " + distance + " STAY IN PLACE");
                                             }
                                         }
                                     }
                                 } else if (rc.canMove(opponent, distance)) {
-                                    //System.out.println("Moving by direction oppoennt");
+                                    System.out.println("Moving towards opponent");
+                                    rc.setIndicatorLine(rc.getLocation(),rc.getLocation().add(opponent,distance), 255, 255,255);
                                     rc.move(opponent, distance);
                                 }
                             }
@@ -160,7 +170,7 @@ public class BotScout extends RobotPlayer {
                     }
                 }
 
-                if (!nearbyGardener) {
+                if (!nearbyGardener) {//TODO:Could include all enemy units instead of just gardeners
                     stayInPlace = false;
                 }
                 //Try to dodge
@@ -188,6 +198,7 @@ public class BotScout extends RobotPlayer {
                 } else if (roundNum == ROUND_TO_BROADCAST_TREE_DENSITY) {
                     broadcastTreeDensity();
                 }
+                System.out.println("\n");
                 Clock.yield();
             } catch (Exception e) {
                 e.printStackTrace();
@@ -263,10 +274,16 @@ public class BotScout extends RobotPlayer {
         NOTE: shakeNeighbors() has to have been called.
      */
     public static TreeInfo treeHideNavigateTo(MapLocation loc, TreeInfo[] trees, RobotInfo[] bots) throws GameActionException {
+        //Check if touching a tree
         MapLocation me = rc.getLocation();
         TreeInfo bestHidingTree = null;
-        float bestHidingTreeDistanceToMe = -1f; //Note: max distance on a 100x100 map is 100. May be subject to change
+        float bestHidingTreeDistanceToMe = -1f;
         float distanceToLoc = me.distanceTo(loc);
+        //Since there is a problem with sensing something you are on, check the previous tree if it was really the optimal tree.
+        if(previousTree!=null){
+            bestHidingTree = previousTree;
+            bestHidingTreeDistanceToMe = me.distanceTo(previousTree.getLocation());
+        }
         //Find trees that decreases the distance
         for (TreeInfo t : trees) {
             MapLocation treeLoc = t.getLocation();
@@ -279,6 +296,7 @@ public class BotScout extends RobotPlayer {
                 }
             }
         }
+        System.out.println("BEST HIDING TREE: " + (bestHidingTree!=null ? bestHidingTree.toString(): "NULL"));
         return bestHidingTree;
     }
 
@@ -315,5 +333,6 @@ public class BotScout extends RobotPlayer {
         }
         if(!rc.hasMoved())
     }*/
+
 
 }

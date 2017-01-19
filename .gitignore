@@ -18,7 +18,7 @@
 *.iws
 /.idea/
 build.gradle
-client32/
+/client32/
 gradle/
 gradlew
 gradlew.bat
