@@ -12,12 +12,17 @@
 *.pyc
 .gradle
 /client/
-/client32/
 *.jar
 *.iml
 *.ipr
 *.iws
 /.idea/
+build.gradle
+client32/
+gradle/
+gradlew
+gradlew.bat
+
 
 
 # User-specific stuff:
@@ -27,3 +32,4 @@ battlecode-scaffold.iws
 .classpath
 .project
 .settings/
+
