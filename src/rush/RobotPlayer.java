@@ -107,9 +107,6 @@ public strictfp class RobotPlayer extends Globals {
     }
 
 
-
-
-
     //TODO: Put in loop of each bot
     public static void shakeNeighbors() throws GameActionException {
         senseNearbyTrees = rc.senseNearbyTrees();
@@ -284,13 +281,13 @@ public strictfp class RobotPlayer extends Globals {
                 if (i != openDirFromList && rc.canPlantTree(dirList[i])) {
                     rc.plantTree(dirList[i]);
                     startedPlanting = true;
-                    if(rc.readBroadcast(GARDENER_UNDER_ATTACK)==0){//TODO: COULD BE REMOVE LATER
-                        rc.broadcast(GARDENER_UNDER_ATTACK,encodeBroadcastLoc(rc.getLocation()));
+                    if (rc.readBroadcast(GARDENER_UNDER_ATTACK) == 0) {//TODO: COULD BE REMOVE LATER
+                        rc.broadcast(GARDENER_UNDER_ATTACK, encodeBroadcastLoc(rc.getLocation()));
                     }
                     return true;
-                } else if(treeInWay(rc.senseNearbyTrees(), rc.getLocation().add(dirList[i], MIN_GARDENER_CLEARING))){
+                } else if (treeInWay(rc.senseNearbyTrees(), rc.getLocation().add(dirList[i], MIN_GARDENER_CLEARING))) {
                     rc.broadcast(NEED_LUMBERJACK_FOR_CLEARING, encodeBroadcastLoc(rc.getLocation().add(dirList[i], MIN_GARDENER_CLEARING)));
-                } else{
+                } else {
                     //TURN BACK ON//rc.setIndicatorDot(rc.getLocation().add(dirList[i]) , 255,0, 0   );
                 }
             }
@@ -299,9 +296,9 @@ public strictfp class RobotPlayer extends Globals {
         return false;
     }
 
-    public static Boolean treeInWay(TreeInfo[] trees, MapLocation location){
-        for(TreeInfo t: trees){
-            if(t.getLocation().distanceTo(location) < MIN_GARDENER_CLEARING){
+    public static Boolean treeInWay(TreeInfo[] trees, MapLocation location) {
+        for (TreeInfo t : trees) {
+            if (t.getLocation().distanceTo(location) < MIN_GARDENER_CLEARING) {
                 //System.out.println("REQUEST CLEARING");
                 //TURN BACK ON//rc.setIndicatorDot(location, 0,255,0);
                 return true;
@@ -450,11 +447,10 @@ public strictfp class RobotPlayer extends Globals {
                         if (i > 0) {
                             patienceLeft--;
                             //If lumberjack just stay at it and it will through
-                            if(rc.getType() == RobotType.LUMBERJACK && patienceLeft<=0){
+                            if (rc.getType() == RobotType.LUMBERJACK && patienceLeft <= 0) {
                                 goRight = !goRight;
                                 patienceLeft = MAX_LUMBERJACK_PATIENCE;
-                            }
-                            else if (patienceLeft <= 0 ) {
+                            } else if (patienceLeft <= 0) {
                                 goRight = !goRight;
                                 patienceLeft = MAX_PATIENCE;
                             }
@@ -476,8 +472,7 @@ public strictfp class RobotPlayer extends Globals {
         if (rallyPoint != null) {
             //System.out.println("RALLY AT: " + rallyPoint.toString());
             navigateTo(rallyPoint);
-        }
-        else{
+        } else {
             //System.out.println("RALLY NULL");
         }
     }
@@ -490,17 +485,49 @@ public strictfp class RobotPlayer extends Globals {
     }
 
 
-    public static void stillLookingForPlanting() throws GameActionException{// PROBLEM: LATENCE BETWEEN TURNS. TODO
-        int input = rc.readBroadcast(GARDENER_LOOKING_FOR_PLANTING+rc.getRoundNum()% 3);
-        rc.broadcast(GARDENER_LOOKING_FOR_PLANTING+rc.getRoundNum()% 3,input+1);
+    public static void stillLookingForPlanting() throws GameActionException {// PROBLEM: LATENCE BETWEEN TURNS. TODO
+        int input = rc.readBroadcast(GARDENER_LOOKING_FOR_PLANTING + rc.getRoundNum() % 3);
+        rc.broadcast(GARDENER_LOOKING_FOR_PLANTING + rc.getRoundNum() % 3, input + 1);
         //System.out.println("NUMBER OF GARDNERS LOOKING: " + (input+1));
     }
 
-    public static void debug_println(String out){
+    /*
+    Returns closest MapLocation to ideal that doesn't have bullets within the rc's body radius. If none exist returns null.
+     */
+    public static MapLocation avoidBulletsMove(Direction ideal, float distance) {
+        MapLocation me = rc.getLocation();
+        MapLocation bestSpot = me.add(ideal, distance);
+        if (rc.canMove(ideal, distance) && isBulletFreeLocation(bestSpot)) {
+            return bestSpot;
+        }
+        for (int i = 0; i < 72; i++) {
+            Direction offset = new Direction(ideal.radians + (float) (2 * Math.PI * ((float) i) / 72),distance);
+            MapLocation nextBestSpot = me.add(offset,distance);
+            if (rc.canMove(nextBestSpot) && !rc.hasMoved() && isBulletFreeLocation(nextBestSpot)) {
+                return nextBestSpot;
+            }
+            offset = new Direction(ideal.radians + (float) (-2 * Math.PI * ((float) i) / 72),distance);
+            nextBestSpot = me.add(offset,distance);
+            if (rc.canMove(nextBestSpot) && !rc.hasMoved() && isBulletFreeLocation(nextBestSpot)) {
+                return nextBestSpot;
+            }
+        }
+
+        return null;
+    }
+
+    /*
+    Returns false if the move location has bullets within a radius of the rc's body radius
+     */
+    public static boolean isBulletFreeLocation(MapLocation move) {
+        return rc.senseNearbyBullets(move, rc.getType().bodyRadius).length == 0;
+    }
+
+    public static void debug_println(String out) {
         System.out.println(out);
     }
 
-    public static void debug_print(String out){
+    public static void debug_print(String out) {
         System.out.print(out);
     }
 }
