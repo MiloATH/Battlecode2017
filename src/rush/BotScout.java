@@ -61,9 +61,13 @@ public class BotScout extends RobotPlayer {
                             if (!stayInPlace && !rc.hasMoved()) {
                                 //TODO: Don't run over your own bullets.
                                 ////System.out.println("MOVING " + (distance) + " in direction " + opponent.toString());
+                                nextTree = treeHideNavigateTo(b.getLocation(), senseNearbyTrees, bots);
                                 if (nextTree == null) {//Find tree
                                     System.out.println("NEXT TREE IS NULL");
                                     nextTree = treeHideNavigateTo(b.getLocation(), senseNearbyTrees, bots);
+                                }
+                                if(previousTree==null && nextTree!=null){//COULD BE A PROBLEM
+                                    previousTree=nextTree;
                                 }
                                 System.out.println("NEXT TREE IS " + (nextTree==null ? "null": nextTree.toString()));
                                 if (nextTree != null) {//If still null then there aren't any trees found by treeHideNavigateTo()
@@ -280,23 +284,31 @@ public class BotScout extends RobotPlayer {
         float bestHidingTreeDistanceToMe = -1f;
         float distanceToLoc = me.distanceTo(loc);
         //Since there is a problem with sensing something you are on, check the previous tree if it was really the optimal tree.
-        if(previousTree!=null){
+        /*if(previousTree!=null){
             bestHidingTree = previousTree;
             bestHidingTreeDistanceToMe = me.distanceTo(previousTree.getLocation());
-        }
+        }*/
+
         //Find trees that decreases the distance
         for (TreeInfo t : trees) {
             MapLocation treeLoc = t.getLocation();
-            if (treeLoc.distanceTo(loc) < distanceToLoc - 2.5) {
+            if (treeLoc.distanceTo(loc) < distanceToLoc) {
                 //Find the one that is minimum distance away from me.
                 float distanceToMe = treeLoc.distanceTo(me);
-                if ((bestHidingTreeDistanceToMe == -1 || distanceToMe < bestHidingTreeDistanceToMe) && !treeTakenAlready(t, bots)) {
+                if ((bestHidingTreeDistanceToMe == -1f || distanceToMe < bestHidingTreeDistanceToMe) && !treeTakenAlready(t, bots)) {
                     bestHidingTreeDistanceToMe = distanceToMe;
                     bestHidingTree = t;
                 }
             }
         }
+        System.out.println("##Can sense previous tree?? "+((previousTree!=null)?rc.canSenseTree(previousTree.getID()):"UNKNOWN/NUll"));
+        System.out.println("###Distance to Location: " + distanceToLoc + " Is circle Occ??? " + rc.isCircleOccupiedExceptByThisRobot(rc.getLocation(),rc.getType().bodyRadius+0.1f));
+        if(bestHidingTree==null && rc.isCircleOccupiedExceptByThisRobot(rc.getLocation(),rc.getType().bodyRadius+0.1f)){
+            System.out.println("BEST TREE IS Previous Tree");
+            return previousTree;
+        }
         System.out.println("BEST HIDING TREE: " + (bestHidingTree!=null ? bestHidingTree.toString(): "NULL"));
+        System.out.println("Previous Tree is: " + (previousTree!=null ? previousTree.toString():"NULL"));
         return bestHidingTree;
     }
 

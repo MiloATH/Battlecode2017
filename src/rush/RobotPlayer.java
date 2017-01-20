@@ -9,7 +9,6 @@ public strictfp class RobotPlayer extends Globals {
     static Random myRand;
     // Keep broadcast channels
     static int GARDENER_CHANNEL = 50;
-    static int GARDENER_LOOKING_FOR_PLANTING = 55;
     static int LUMBERJACK_CHANNEL = 60;
     static int SCOUTS_CHANNEL = 70;
     static int TREE_CHANNEL = 80;
@@ -18,8 +17,9 @@ public strictfp class RobotPlayer extends Globals {
     static int RALLY_LOCATION_CHANNEL = 110;
     static int TREE_DENSITY_CHANNEL = 120;
     static int GARDENER_UNDER_ATTACK = 130;
-    static int ENEMY_SEEN_CHANNEL = 900;
     static int NEED_LUMBERJACK_FOR_CLEARING = 140;
+    static int ENEMY_SEEN_CHANNEL = 900;
+    static int GARDENER_LOOKING_FOR_PLANTING = 950;//Needs 3 below and 5 above
 
     // Keep important numbers here
     static int GARDENER_MAX = 30;
@@ -181,13 +181,13 @@ public strictfp class RobotPlayer extends Globals {
                 int prevNumGard = rc.readBroadcast(GARDENER_CHANNEL);
 
                 //Read the current one
-                int numberOfGardenerLooking = rc.readBroadcast(GARDENER_LOOKING_FOR_PLANTING + rc.getRoundNum()% 20 - 1);
+                int numberOfGardenerLooking = rc.readBroadcast(GARDENER_LOOKING_FOR_PLANTING + rc.getRoundNum()% 5 - 1);
                 System.out.println("ARCHON SEES " + numberOfGardenerLooking+ " GARDENERS LOOKING");
                 if (prevNumGard < GARDENER_MAX && numberOfGardenerLooking<MAX_NUMBER_OF_GARDENER_LOOKING) {
                     rc.broadcast(GARDENER_CHANNEL, prevNumGard + tryToBuild(RobotType.GARDENER, RobotType.GARDENER.bulletCost));
                 }
                 //Reset the one from a few rounds ago.
-                rc.broadcast(GARDENER_LOOKING_FOR_PLANTING + rc.getRoundNum()%20 - 3,0);//TODO: THIS MAY NOT ALWAYS WORK. COULD BE A PROBLEM
+                rc.broadcast(GARDENER_LOOKING_FOR_PLANTING + rc.getRoundNum()%5 - 3,0);
                 //Then wander
                 //retreat();
                 Clock.yield();
