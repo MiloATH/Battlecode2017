@@ -14,8 +14,6 @@ public class BotSoldier extends RobotPlayer{
             try {
                 victoryPointsEndgameCheck();
                 dodge();
-                rally();
-                shakeNeighbors();
                 if(rc.getRoundNum()<EARLY_GAME){//stay near gardeners at start
                     RobotInfo[] bots = rc.senseNearbyRobots();
                     for(RobotInfo b: bots){
@@ -26,6 +24,23 @@ public class BotSoldier extends RobotPlayer{
                         }
                     }
                 }
+                rally();
+
+                //Support gardener under attack
+                int input = rc.readBroadcast(GARDENER_UNDER_ATTACK);//TODO: COULD BE REMOVED LATER
+                System.out.println("INPUT: "+ input + " GARDENER LOCATION: ");
+                if(input!=0){
+                    MapLocation gardenerInNeed = decodeBroadcastLoc(input);
+                    System.out.println(gardenerInNeed.toString());
+                    if(gardenerInNeed.distanceTo(rc.getLocation())<0.5){
+                        rc.broadcast(GARDENER_UNDER_ATTACK,0);
+                    }
+                    else {
+                        navigateTo(gardenerInNeed);
+                    }
+                }
+
+                shakeNeighbors();
                 MapLocation myLocation = rc.getLocation();
                 // See if there are any nearby enemy robots
                 RobotInfo[] robots = rc.senseNearbyRobots(-1, enemy);

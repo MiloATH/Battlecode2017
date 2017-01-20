@@ -19,7 +19,7 @@ public strictfp class RobotPlayer extends Globals {
     static int GARDENER_UNDER_ATTACK = 130;
     static int NEED_LUMBERJACK_FOR_CLEARING = 140;
     static int ENEMY_SEEN_CHANNEL = 900;
-    static int GARDENER_LOOKING_FOR_PLANTING = 950;//Needs 3 below and 5 above
+    static int GARDENER_LOOKING_FOR_PLANTING = 950;//Needs 3 above
 
     // Keep important numbers here
     static int GARDENER_MAX = 30;
@@ -106,11 +106,12 @@ public strictfp class RobotPlayer extends Globals {
         }
     }
 
-    private static void runTank() throws GameActionException {//TODO
+    private static void runTank() throws GameActionException {//TODO: EVERYTHING
         while (true) {
             try {
                 victoryPointsEndgameCheck();
                 RobotInfo[] bots = rc.senseNearbyRobots();
+
                 for (RobotInfo b : bots) {
                     if (b.getTeam() != rc.getTeam()) {
                         Direction towardsEnemy = rc.getLocation().directionTo(b.getLocation());
@@ -140,6 +141,8 @@ public strictfp class RobotPlayer extends Globals {
         //rc.broadcast(RALLY_LOCATION_CHANNEL, encodeBroadcastLoc(new MapLocation(me.x + 5, me.y + 5)));
         while (true) {
             try {
+                victoryPointsEndgameCheck();
+                dodge();
                 if(rc.getRoundNum() < EARLY_GAME){
                     MAX_NUMBER_OF_GARDENER_LOOKING = 2;
                 }
@@ -150,8 +153,6 @@ public strictfp class RobotPlayer extends Globals {
                 if(rc.getRoundNum() >= MID_GAME){
                     MAX_NUMBER_OF_GARDENER_LOOKING = 5;
                 }
-                victoryPointsEndgameCheck();
-                dodge();
                 //TODO: make it better or remove middleman
                 //Set rally point if enemy seen and above a round #
                 int enemySeen = rc.readBroadcast(ENEMY_SEEN_CHANNEL);
@@ -165,7 +166,9 @@ public strictfp class RobotPlayer extends Globals {
                         ATTACK_ROUND = 1250;
                     }
                 }
+                System.out.println("GARDENER UNDER ATTACK INPUT: " + gardenerUnderAttack);
                 if (gardenerUnderAttack != 0) {
+                    System.out.println("Rally at gardener under attack");
                     rc.broadcast(RALLY_LOCATION_CHANNEL, gardenerUnderAttack);
                 } else if (enemySeen != 0) {
                     if (rc.getRoundNum() > ATTACK_ROUND) {//ATTACK
@@ -181,13 +184,14 @@ public strictfp class RobotPlayer extends Globals {
                 int prevNumGard = rc.readBroadcast(GARDENER_CHANNEL);
 
                 //Read the current one
-                int numberOfGardenerLooking = rc.readBroadcast(GARDENER_LOOKING_FOR_PLANTING + rc.getRoundNum()% 5 - 1);
-                System.out.println("ARCHON SEES " + numberOfGardenerLooking+ " GARDENERS LOOKING");
+                int numberOfGardenerLooking = rc.readBroadcast(GARDENER_LOOKING_FOR_PLANTING + (rc.getRoundNum()-1)% 3);
+                //System.out.println("ARCHON SEES " + numberOfGardenerLooking+ " GARDENERS LOOKING on channel " + ((rc.getRoundNum()+1)% 3));
                 if (prevNumGard < GARDENER_MAX && numberOfGardenerLooking<MAX_NUMBER_OF_GARDENER_LOOKING) {
                     rc.broadcast(GARDENER_CHANNEL, prevNumGard + tryToBuild(RobotType.GARDENER, RobotType.GARDENER.bulletCost));
                 }
                 //Reset the one from a few rounds ago.
-                rc.broadcast(GARDENER_LOOKING_FOR_PLANTING + rc.getRoundNum()%5 - 3,0);
+                rc.broadcast(GARDENER_LOOKING_FOR_PLANTING + (rc.getRoundNum()-2)%3,0);
+                //System.out.println("CLEARED CHANNEL: " + ((rc.getRoundNum())%3));
                 //Then wander
                 //retreat();
                 Clock.yield();
@@ -206,10 +210,10 @@ public strictfp class RobotPlayer extends Globals {
         if (rc.getRoundNum() >= ROUND_TO_BROADCAST_TREE_DENSITY + 1) {
             int treeDensity = rc.readBroadcast(TREE_DENSITY_CHANNEL);
             if (treeDensity > 25) {
-                INITIAL_MOVES_BASE = 40;
+                INITIAL_MOVES_BASE = 15;
             }
             if (treeDensity > 80) {
-                INITIAL_MOVES_BASE = 30;
+                INITIAL_MOVES_BASE = 20;
             }
         }
         while (true) {
@@ -248,9 +252,27 @@ public strictfp class RobotPlayer extends Globals {
                 }
 
                 //Check if under attack
+                //If not under attack and broadcast is my location, set broadcast to 0
+                boolean enemyFound = false;
                 for (RobotInfo bot : bots) {
                     if (bot.getTeam() != rc.getTeam()) {
                         rc.broadcast(GARDENER_UNDER_ATTACK, encodeBroadcastLoc(rc.getLocation()));
+                        System.out.println("BROADCASTED I AM UNDER ATTACK");
+                        enemyFound = true;
+                    }
+                }
+                if(!enemyFound){
+                    MapLocation broadcastLocation = decodeBroadcastLoc(rc.readBroadcast(GARDENER_UNDER_ATTACK));
+                    System.out.println("NO ENEMY SEEN. Broadcast loc: " + (broadcastLocation!=null?broadcastLocation.toString():"NULL"));
+                    if(broadcastLocation!=null){
+                    System.out.println("Delta x: " + Math.abs(broadcastLocation.x - rc.getLocation().x));
+                    System.out.println("Delta y: " + Math.abs(broadcastLocation.y - rc.getLocation().y));
+                    }
+
+                    if(broadcastLocation!=null &&
+                            Math.abs(broadcastLocation.x - rc.getLocation().x) < 2 &&
+                            Math.abs(broadcastLocation.y - rc.getLocation().y) < 2){
+                        rc.broadcast(GARDENER_UNDER_ATTACK,0);
                     }
                 }
 
@@ -262,7 +284,7 @@ public strictfp class RobotPlayer extends Globals {
                 if (buildNum < build.length) {
                     switch (build[buildNum]) {
                         case 0://Tree
-                            //System.out.println("Try to plant");
+                            ////System.out.println("Try to plant");
                             /*System.out.println("Started Planting?: " + startedPlanting + "\nNear Ally Gardeners: " + nearAllyTrees +
                                     "\n #rounds Alive more than/equal moveUntilRound?: " + (numberOfRoundsAlive >= moveUntilRound));*/
                             if ((startedPlanting || !nearAllyTrees) &&
@@ -474,6 +496,9 @@ public strictfp class RobotPlayer extends Globals {
                 if (i != openDirFromList && rc.canPlantTree(dirList[i])) {
                     rc.plantTree(dirList[i]);
                     startedPlanting = true;
+                    if(rc.readBroadcast(GARDENER_UNDER_ATTACK)==0){//TODO: COULD BE REMOVE LATER
+                        rc.broadcast(GARDENER_UNDER_ATTACK,encodeBroadcastLoc(rc.getLocation()));
+                    }
                     return true;
                 } else if(treeInWay(rc.senseNearbyTrees(), rc.getLocation().add(dirList[i], MIN_GARDENER_CLEARING))){
                     rc.broadcast(NEED_LUMBERJACK_FOR_CLEARING, encodeBroadcastLoc(rc.getLocation().add(dirList[i], MIN_GARDENER_CLEARING)));
@@ -489,7 +514,7 @@ public strictfp class RobotPlayer extends Globals {
     public static Boolean treeInWay(TreeInfo[] trees, MapLocation location){
         for(TreeInfo t: trees){
             if(t.getLocation().distanceTo(location) < MIN_GARDENER_CLEARING){
-                System.out.println("REQUEST CLEARING");
+                //System.out.println("REQUEST CLEARING");
                 rc.setIndicatorDot(location, 0,255,0);
                 return true;
             }
@@ -661,7 +686,11 @@ public strictfp class RobotPlayer extends Globals {
     public static void rally() throws GameActionException {
         MapLocation rallyPoint = decodeBroadcastLoc(rc.readBroadcast(RALLY_LOCATION_CHANNEL));
         if (rallyPoint != null) {
+            System.out.println("RALLY AT: " + rallyPoint.toString());
             navigateTo(rallyPoint);
+        }
+        else{
+            System.out.println("RALLY NULL");
         }
     }
 
@@ -674,9 +703,9 @@ public strictfp class RobotPlayer extends Globals {
 
 
     public static void stillLookingForPlanting() throws GameActionException{// PROBLEM: LATENCE BETWEEN TURNS. TODO
-        int input = rc.readBroadcast(GARDENER_LOOKING_FOR_PLANTING+rc.getRoundNum()% 20);
-        rc.broadcast(GARDENER_LOOKING_FOR_PLANTING+rc.getRoundNum()% 20,input+1);
-        System.out.println("NUMBER OF GARDNERS LOOKING: " + (input+1));
+        int input = rc.readBroadcast(GARDENER_LOOKING_FOR_PLANTING+rc.getRoundNum()% 3);
+        rc.broadcast(GARDENER_LOOKING_FOR_PLANTING+rc.getRoundNum()% 3,input+1);
+        //System.out.println("NUMBER OF GARDNERS LOOKING: " + (input+1));
     }
 
 }
