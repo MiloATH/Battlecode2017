@@ -28,10 +28,10 @@ public class BotSoldier extends RobotPlayer{
 
                 //Support gardener under attack
                 int input = rc.readBroadcast(GARDENER_UNDER_ATTACK);//TODO: COULD BE REMOVED LATER
-                System.out.println("INPUT: "+ input + " GARDENER LOCATION: ");
+                //System.out.println("INPUT: "+ input + " GARDENER LOCATION: ");
                 if(input!=0){
                     MapLocation gardenerInNeed = decodeBroadcastLoc(input);
-                    System.out.println(gardenerInNeed.toString());
+                    //System.out.println(gardenerInNeed.toString());
                     if(gardenerInNeed.distanceTo(rc.getLocation())<0.5){
                         rc.broadcast(GARDENER_UNDER_ATTACK,0);
                     }

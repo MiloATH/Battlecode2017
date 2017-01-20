@@ -96,9 +96,9 @@ public class BotScout extends RobotPlayer {
                                             //System.out.println("Check before moving: STAY IN PLACE");
                                         }
                                     } else {
-                                        rc.setIndicatorDot(nextTree.getLocation(), 255, 0, 0);
+                                        //TURN BACK ON//rc.setIndicatorDot(nextTree.getLocation(), 255, 0, 0);
                                         MapLocation bestTreeLoc = nextTree.getLocation();
-                                        rc.setIndicatorLine(rc.getLocation(), bestTreeLoc, 255, 0, 0);
+                                        //TURN BACK ON//rc.setIndicatorLine(rc.getLocation(), bestTreeLoc, 255, 0, 0);
                                         MapLocation meNow = rc.getLocation();
                                         if (stepOnToLocation(bestTreeLoc)) {
                                             //System.out.println("MOVING TO Best Tree: " + bestTreeLoc.toString());
@@ -125,7 +125,7 @@ public class BotScout extends RobotPlayer {
                                     }
                                 } else if (rc.canMove(opponent, distance)) {
                                     //System.out.println("Moving towards opponent");
-                                    rc.setIndicatorLine(rc.getLocation(),rc.getLocation().add(opponent,distance), 255, 255,255);
+                                    //TURN BACK ON//rc.setIndicatorLine(rc.getLocation(),rc.getLocation().add(opponent,distance), 255, 255,255);
                                     //goToExactLocation(b.getLocation());
                                     //stepOnToLocation(b.getLocation());
                                     rc.move(opponent, distance);
@@ -183,7 +183,7 @@ public class BotScout extends RobotPlayer {
                     }
                 }
 
-                if (!nearbyGardener) {//TODO:Could include all enemy units instead of just gardeners
+                if (!nearbyAnythingButArchon(bots)) {
                     stayInPlace = false;
                 }
                 //Try to dodge
@@ -374,6 +374,13 @@ public class BotScout extends RobotPlayer {
         }
         if(!rc.hasMoved())
     }*/
-
+    public static boolean nearbyAnythingButArchon(RobotInfo[] bots){
+        for(RobotInfo b:bots){
+            if(b.getTeam()!=rc.getTeam() && b.getType()!=RobotType.ARCHON){
+                return true;
+            }
+        }
+        return false;
+    }
 
 }

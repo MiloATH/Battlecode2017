@@ -22,8 +22,9 @@ public strictfp class RobotPlayer extends Globals {
     static int GARDENER_LOOKING_FOR_PLANTING = 950;//Needs 3 above
 
     // Keep important numbers here
-    static int GARDENER_MAX = 30;
+    static int GARDENER_MAX = 30;//Subject to change by archon run
     static int MAX_NUMBER_OF_GARDENER_LOOKING = 5;//Changes by in archon run during early game
+    static int VERY_EARLY_GAME = 100;
     static int EARLY_GAME = 200;
     static int MID_GAME = 500;
     static int LUMBERJACK_MAX = 30;
@@ -143,6 +144,13 @@ public strictfp class RobotPlayer extends Globals {
             try {
                 victoryPointsEndgameCheck();
                 dodge();
+                if(rc.getRoundNum()<VERY_EARLY_GAME){
+                    GARDENER_MAX = 1;
+                }
+                else{
+                    GARDENER_MAX = 30;
+                }
+
                 if(rc.getRoundNum() < EARLY_GAME){
                     MAX_NUMBER_OF_GARDENER_LOOKING = 2;
                 }
@@ -166,14 +174,14 @@ public strictfp class RobotPlayer extends Globals {
                         ATTACK_ROUND = 1250;
                     }
                 }
-                System.out.println("GARDENER UNDER ATTACK INPUT: " + gardenerUnderAttack);
+                //System.out.println("GARDENER UNDER ATTACK INPUT: " + gardenerUnderAttack);
                 if (gardenerUnderAttack != 0) {
-                    System.out.println("Rally at gardener under attack");
+                    //System.out.println("Rally at gardener under attack");
                     rc.broadcast(RALLY_LOCATION_CHANNEL, gardenerUnderAttack);
                 } else if (enemySeen != 0) {
                     if (rc.getRoundNum() > ATTACK_ROUND) {//ATTACK
                         rc.broadcast(RALLY_LOCATION_CHANNEL, enemySeen);
-                    } else {
+                    } else if(rc.getRoundNum() > ATTACK_ROUND - 200){
                         MapLocation me = rc.getLocation();
                         MapLocation enemy = decodeBroadcastLoc(enemySeen);
                         MapLocation quarterOfTheWay = new MapLocation(me.x + (enemy.x - me.x) / 4, me.y + (enemy.y - me.y) / 4);
@@ -257,16 +265,16 @@ public strictfp class RobotPlayer extends Globals {
                 for (RobotInfo bot : bots) {
                     if (bot.getTeam() != rc.getTeam()) {
                         rc.broadcast(GARDENER_UNDER_ATTACK, encodeBroadcastLoc(rc.getLocation()));
-                        System.out.println("BROADCASTED I AM UNDER ATTACK");
+                        //System.out.println("BROADCASTED I AM UNDER ATTACK");
                         enemyFound = true;
                     }
                 }
                 if(!enemyFound){
                     MapLocation broadcastLocation = decodeBroadcastLoc(rc.readBroadcast(GARDENER_UNDER_ATTACK));
-                    System.out.println("NO ENEMY SEEN. Broadcast loc: " + (broadcastLocation!=null?broadcastLocation.toString():"NULL"));
+                    //System.out.println("NO ENEMY SEEN. Broadcast loc: " + (broadcastLocation!=null?broadcastLocation.toString():"NULL"));
                     if(broadcastLocation!=null){
-                    System.out.println("Delta x: " + Math.abs(broadcastLocation.x - rc.getLocation().x));
-                    System.out.println("Delta y: " + Math.abs(broadcastLocation.y - rc.getLocation().y));
+                    //System.out.println("Delta x: " + Math.abs(broadcastLocation.x - rc.getLocation().x));
+                    //System.out.println("Delta y: " + Math.abs(broadcastLocation.y - rc.getLocation().y));
                     }
 
                     if(broadcastLocation!=null &&
@@ -503,7 +511,7 @@ public strictfp class RobotPlayer extends Globals {
                 } else if(treeInWay(rc.senseNearbyTrees(), rc.getLocation().add(dirList[i], MIN_GARDENER_CLEARING))){
                     rc.broadcast(NEED_LUMBERJACK_FOR_CLEARING, encodeBroadcastLoc(rc.getLocation().add(dirList[i], MIN_GARDENER_CLEARING)));
                 } else{
-                    rc.setIndicatorDot(rc.getLocation().add(dirList[i]) , 255,0, 0   );
+                    //TURN BACK ON//rc.setIndicatorDot(rc.getLocation().add(dirList[i]) , 255,0, 0   );
                 }
             }
         }
@@ -515,7 +523,7 @@ public strictfp class RobotPlayer extends Globals {
         for(TreeInfo t: trees){
             if(t.getLocation().distanceTo(location) < MIN_GARDENER_CLEARING){
                 //System.out.println("REQUEST CLEARING");
-                rc.setIndicatorDot(location, 0,255,0);
+                //TURN BACK ON//rc.setIndicatorDot(location, 0,255,0);
                 return true;
             }
         }
@@ -686,11 +694,11 @@ public strictfp class RobotPlayer extends Globals {
     public static void rally() throws GameActionException {
         MapLocation rallyPoint = decodeBroadcastLoc(rc.readBroadcast(RALLY_LOCATION_CHANNEL));
         if (rallyPoint != null) {
-            System.out.println("RALLY AT: " + rallyPoint.toString());
+            //System.out.println("RALLY AT: " + rallyPoint.toString());
             navigateTo(rallyPoint);
         }
         else{
-            System.out.println("RALLY NULL");
+            //System.out.println("RALLY NULL");
         }
     }
 
