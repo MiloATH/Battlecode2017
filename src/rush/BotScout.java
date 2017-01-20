@@ -52,7 +52,9 @@ public class BotScout extends RobotPlayer {
                             rc.broadcast(ENEMY_SEEN_CHANNEL, encodeBroadcastLoc(b.getLocation()));
                         } else {//if (b.getType() == RobotType.GARDENER) {
                             debug_println("ENEMY IS NOT AN ARCHON SEEN");
-                            nearbyGardener = true;
+                            if(b.getType()==RobotType.GARDENER) {
+                                nearbyGardener = true;
+                            }
                             Direction opponent = rc.getLocation().directionTo(b.getLocation());
                             float distance = (float) (b.getLocation().distanceTo(rc.getLocation()));
                             distance = distance < 0 ? 0 : distance;
