@@ -2,7 +2,7 @@ package rush;
 
 import battlecode.common.*;
 
-public class BotSoldier extends RobotPlayer{
+public class BotSoldier extends RobotPlayer {
 
     static void loop() throws GameActionException {
         Team enemy = rc.getTeam().opponent();
@@ -14,11 +14,11 @@ public class BotSoldier extends RobotPlayer{
             try {
                 victoryPointsEndgameCheck();
                 dodge();
-                if(rc.getRoundNum()<EARLY_GAME){//stay near gardeners at start
+                if (rc.getRoundNum() < EARLY_GAME) {//stay near gardeners at start
                     RobotInfo[] bots = rc.senseNearbyRobots();
-                    for(RobotInfo b: bots){
-                        if(b.getTeam()==rc.getTeam() && b.getType()==RobotType.GARDENER){
-                            if(b.getLocation().distanceTo(rc.getLocation()) > 10){
+                    for (RobotInfo b : bots) {
+                        if (b.getTeam() == rc.getTeam() && b.getType() == RobotType.GARDENER) {
+                            if (b.getLocation().distanceTo(rc.getLocation()) > 10) {
                                 navigateTo(b.getLocation());
                             }
                         }
@@ -29,13 +29,12 @@ public class BotSoldier extends RobotPlayer{
                 //Support gardener under attack
                 int input = rc.readBroadcast(GARDENER_UNDER_ATTACK);//TODO: COULD BE REMOVED LATER
                 //System.out.println("INPUT: "+ input + " GARDENER LOCATION: ");
-                if(input!=0){
+                if (input != 0) {
                     MapLocation gardenerInNeed = decodeBroadcastLoc(input);
                     //System.out.println(gardenerInNeed.toString());
-                    if(gardenerInNeed.distanceTo(rc.getLocation())<0.5){
-                        rc.broadcast(GARDENER_UNDER_ATTACK,0);
-                    }
-                    else {
+                    if (gardenerInNeed.distanceTo(rc.getLocation()) < 0.5) {
+                        rc.broadcast(GARDENER_UNDER_ATTACK, 0);
+                    } else {
                         navigateTo(gardenerInNeed);
                     }
                 }

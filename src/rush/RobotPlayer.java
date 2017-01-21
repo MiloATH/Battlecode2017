@@ -107,9 +107,6 @@ public strictfp class RobotPlayer extends Globals {
     }
 
 
-
-
-
     //TODO: Put in loop of each bot
     public static void shakeNeighbors() throws GameActionException {
         senseNearbyTrees = rc.senseNearbyTrees();
@@ -284,13 +281,13 @@ public strictfp class RobotPlayer extends Globals {
                 if (i != openDirFromList && rc.canPlantTree(dirList[i])) {
                     rc.plantTree(dirList[i]);
                     startedPlanting = true;
-                    if(rc.readBroadcast(GARDENER_UNDER_ATTACK)==0){//TODO: COULD BE REMOVE LATER
-                        rc.broadcast(GARDENER_UNDER_ATTACK,encodeBroadcastLoc(rc.getLocation()));
+                    if (rc.readBroadcast(GARDENER_UNDER_ATTACK) == 0) {//TODO: COULD BE REMOVE LATER
+                        rc.broadcast(GARDENER_UNDER_ATTACK, encodeBroadcastLoc(rc.getLocation()));
                     }
                     return true;
-                } else if(treeInWay(rc.senseNearbyTrees(), rc.getLocation().add(dirList[i], MIN_GARDENER_CLEARING))){
+                } else if (treeInWay(rc.senseNearbyTrees(), rc.getLocation().add(dirList[i], MIN_GARDENER_CLEARING))) {
                     rc.broadcast(NEED_LUMBERJACK_FOR_CLEARING, encodeBroadcastLoc(rc.getLocation().add(dirList[i], MIN_GARDENER_CLEARING)));
-                } else{
+                } else {
                     //TURN BACK ON//rc.setIndicatorDot(rc.getLocation().add(dirList[i]) , 255,0, 0   );
                 }
             }
@@ -299,9 +296,9 @@ public strictfp class RobotPlayer extends Globals {
         return false;
     }
 
-    public static Boolean treeInWay(TreeInfo[] trees, MapLocation location){
-        for(TreeInfo t: trees){
-            if(t.getLocation().distanceTo(location) < MIN_GARDENER_CLEARING){
+    public static Boolean treeInWay(TreeInfo[] trees, MapLocation location) {
+        for (TreeInfo t : trees) {
+            if (t.getLocation().distanceTo(location) < MIN_GARDENER_CLEARING) {
                 //System.out.println("REQUEST CLEARING");
                 //TURN BACK ON//rc.setIndicatorDot(location, 0,255,0);
                 return true;
@@ -450,11 +447,10 @@ public strictfp class RobotPlayer extends Globals {
                         if (i > 0) {
                             patienceLeft--;
                             //If lumberjack just stay at it and it will through
-                            if(rc.getType() == RobotType.LUMBERJACK && patienceLeft<=0){
+                            if (rc.getType() == RobotType.LUMBERJACK && patienceLeft <= 0) {
                                 goRight = !goRight;
                                 patienceLeft = MAX_LUMBERJACK_PATIENCE;
-                            }
-                            else if (patienceLeft <= 0 ) {
+                            } else if (patienceLeft <= 0) {
                                 goRight = !goRight;
                                 patienceLeft = MAX_PATIENCE;
                             }
@@ -476,8 +472,7 @@ public strictfp class RobotPlayer extends Globals {
         if (rallyPoint != null) {
             //System.out.println("RALLY AT: " + rallyPoint.toString());
             navigateTo(rallyPoint);
-        }
-        else{
+        } else {
             //System.out.println("RALLY NULL");
         }
     }
@@ -490,17 +485,17 @@ public strictfp class RobotPlayer extends Globals {
     }
 
 
-    public static void stillLookingForPlanting() throws GameActionException{// PROBLEM: LATENCE BETWEEN TURNS. TODO
-        int input = rc.readBroadcast(GARDENER_LOOKING_FOR_PLANTING+rc.getRoundNum()% 3);
-        rc.broadcast(GARDENER_LOOKING_FOR_PLANTING+rc.getRoundNum()% 3,input+1);
+    public static void stillLookingForPlanting() throws GameActionException {// PROBLEM: LATENCE BETWEEN TURNS. TODO
+        int input = rc.readBroadcast(GARDENER_LOOKING_FOR_PLANTING + rc.getRoundNum() % 3);
+        rc.broadcast(GARDENER_LOOKING_FOR_PLANTING + rc.getRoundNum() % 3, input + 1);
         //System.out.println("NUMBER OF GARDNERS LOOKING: " + (input+1));
     }
 
-    public static void debug_println(String out){
+    public static void debug_println(String out) {
         System.out.println(out);
     }
 
-    public static void debug_print(String out){
+    public static void debug_print(String out) {
         System.out.print(out);
     }
 }

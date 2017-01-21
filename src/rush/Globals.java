@@ -14,14 +14,14 @@ public class Globals {
     public static MapLocation centerOfAllInitialArchons;
     public static MapLocation centerOfFriendlyInitialArchons;
     public static MapLocation centerOfEnemyInitialArchons;
-    
-    public static HashMap< MapLocation , Boolean > InitialEnemyArchonLocationStatus;
+
+    public static HashMap<MapLocation, Boolean> InitialEnemyArchonLocationStatus;
     public static boolean initialEnemyArchonLocatonsChecked;
-    
+
     public static MapLocation[] initialFriendlyArchonLocations;
-    
+
     public static MapLocation[] getArchonNumber;
-    
+
     public static boolean setUpInitialGlobalInformation = false;
     public static boolean scoutedFirstEnemyArchonLocation = false;
     public static boolean scoutedSecondEnemyArchonLocation = false;
@@ -30,13 +30,12 @@ public class Globals {
     public static Direction towardsEnemy;
 
 
-	public static int numberOfInitialArchon;
+    public static int numberOfInitialArchon;
 
     public static RobotInfo[] visibleEnemies = null;
     public static RobotInfo[] visibleFriendlies = null;
     public static RobotInfo[] visibleBullets = null;
     public static RobotInfo[] visibleOnTargetBullets = null;
-
 
 
     public static int minSquadSize = 5;
@@ -71,17 +70,17 @@ public class Globals {
     }
 
     public static MapLocation ArchonCenter(double f, MapLocation a) {
-        return new MapLocation((int)Math.round(f * a.x), (int)Math.round(f * a.y));
+        return new MapLocation((int) Math.round(f * a.x), (int) Math.round(f * a.y));
 
     }
-    
+
     public static boolean getSetUpInitialGlobalInfo() {
-		return setUpInitialGlobalInformation;
-	}
+        return setUpInitialGlobalInformation;
+    }
 
-	public static void setSetUpInitialGlobalInfo(boolean gotNumberOfInitialArchons) {
-		Globals.setUpInitialGlobalInformation = gotNumberOfInitialArchons;
-	}
+    public static void setSetUpInitialGlobalInfo(boolean gotNumberOfInitialArchons) {
+        Globals.setUpInitialGlobalInformation = gotNumberOfInitialArchons;
+    }
 
-	
+
 }

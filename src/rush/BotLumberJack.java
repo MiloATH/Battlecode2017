@@ -40,9 +40,9 @@ public class BotLumberJack extends RobotPlayer {
         }
     }
 
-    public static void lumberjackNeededRally() throws GameActionException{
+    public static void lumberjackNeededRally() throws GameActionException {
         MapLocation location = decodeBroadcastLoc(rc.readBroadcast(NEED_LUMBERJACK_FOR_CLEARING));
-        if(location!=null){
+        if (location != null) {
             navigateTo(location);
         }
     }
