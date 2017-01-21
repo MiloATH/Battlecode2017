@@ -117,7 +117,7 @@ public class BotScout extends RobotPlayer {
                                         distance = meNow.distanceTo(b.getLocation());
                                         ////System.out.println("My Location: " + meNow.toString());
                                         ////System.out.println("x: " + (bestTreeLoc.x - meNow.x) + " y: " + (bestTreeLoc.y - meNow.y) + " d: " + distance);
-                                        if (nextTree.getLocation().distanceTo(meNow) < Math.max(0, nextTree.getRadius() - rc.getType().bodyRadius) + 0.001) {
+                                         if (nextTree.getLocation().distanceTo(meNow) < Math.max(0, nextTree.getRadius() - rc.getType().bodyRadius) + 0.001) {
                                             previousTree = nextTree;
                                             nextTree = null;
                                             //System.out.println("x: " + (bestTreeLoc.x - meNow.x) + " y: " + (bestTreeLoc.y - meNow.y) + " d: " + distance + " FIND NEXT TREE");

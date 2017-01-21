@@ -8,6 +8,7 @@ public class BotTank extends RobotPlayer {
         while (true) {
             try {
                 victoryPointsEndgameCheck();
+                rally();
                 RobotInfo[] bots = rc.senseNearbyRobots();
 
                 for (RobotInfo b : bots) {

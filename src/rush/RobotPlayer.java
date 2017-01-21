@@ -491,6 +491,38 @@ public strictfp class RobotPlayer extends Globals {
         //System.out.println("NUMBER OF GARDNERS LOOKING: " + (input+1));
     }
 
+    /*
+    Returns closest MapLocation to ideal that doesn't have bullets within the rc's body radius. If none exist returns null.
+     */
+    public static MapLocation avoidBulletsMove(Direction ideal, float distance) {
+        MapLocation me = rc.getLocation();
+        MapLocation bestSpot = me.add(ideal, distance);
+        if (rc.canMove(ideal, distance) && isBulletFreeLocation(bestSpot)) {
+            return bestSpot;
+        }
+        for (int i = 0; i < 72; i++) {
+            Direction offset = new Direction(ideal.radians + (float) (2 * Math.PI * ((float) i) / 72),distance);
+            MapLocation nextBestSpot = me.add(offset,distance);
+            if (rc.canMove(nextBestSpot) && !rc.hasMoved() && isBulletFreeLocation(nextBestSpot)) {
+                return nextBestSpot;
+            }
+            offset = new Direction(ideal.radians + (float) (-2 * Math.PI * ((float) i) / 72),distance);
+            nextBestSpot = me.add(offset,distance);
+            if (rc.canMove(nextBestSpot) && !rc.hasMoved() && isBulletFreeLocation(nextBestSpot)) {
+                return nextBestSpot;
+            }
+        }
+
+        return null;
+    }
+
+    /*
+    Returns false if the move location has bullets within a radius of the rc's body radius
+     */
+    public static boolean isBulletFreeLocation(MapLocation move) {
+        return rc.senseNearbyBullets(move, rc.getType().bodyRadius).length == 0;
+    }
+
     public static void debug_println(String out) {
         System.out.println(out);
     }
