@@ -479,7 +479,7 @@ public strictfp class RobotPlayer extends Globals {
 
     public static void victoryPointsEndgameCheck() throws GameActionException {
         //If we have 10000 bullets, end the game.
-        if (rc.getTeamBullets() >= 7.5 + (rc.getRoundNum())*12.5 / 3000 || (rc.getRoundLimit() - rc.getRoundNum() < 2)) {
+        if (rc.getTeamBullets() >= 1000 * (7.5 + (rc.getRoundNum()) * 12.5 / 3000) || (rc.getRoundLimit() - rc.getRoundNum() < 2)) {
             rc.donate(rc.getTeamBullets());
         }
     }
@@ -501,13 +501,13 @@ public strictfp class RobotPlayer extends Globals {
             return bestSpot;
         }
         for (int i = 0; i < 72; i++) {
-            Direction offset = new Direction(ideal.radians + (float) (2 * Math.PI * ((float) i) / 72),distance);
-            MapLocation nextBestSpot = me.add(offset,distance);
+            Direction offset = new Direction(ideal.radians + (float) (2 * Math.PI * ((float) i) / 72), distance);
+            MapLocation nextBestSpot = me.add(offset, distance);
             if (rc.canMove(nextBestSpot) && !rc.hasMoved() && isBulletFreeLocation(nextBestSpot)) {
                 return nextBestSpot;
             }
-            offset = new Direction(ideal.radians + (float) (-2 * Math.PI * ((float) i) / 72),distance);
-            nextBestSpot = me.add(offset,distance);
+            offset = new Direction(ideal.radians + (float) (-2 * Math.PI * ((float) i) / 72), distance);
+            nextBestSpot = me.add(offset, distance);
             if (rc.canMove(nextBestSpot) && !rc.hasMoved() && isBulletFreeLocation(nextBestSpot)) {
                 return nextBestSpot;
             }
