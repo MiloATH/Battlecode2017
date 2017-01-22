@@ -57,7 +57,7 @@ public strictfp class RobotPlayer {
     //1:Scout
     //2:Lumberjack
     //3:Soldier
-    static int[] build = {2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    static int[] build = { 2, 2, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0};
 
 
     //Mass Lumberjack flooding method constants
@@ -141,14 +141,17 @@ public strictfp class RobotPlayer {
 
 
     public static int encodeBroadcastLoc(MapLocation location) {
-        return ((int) (location.x + .5)) * 100000 + (int) (location.y + .5);//Plus .5 to each so they round either up or down
+        debug_println("ENCODED: " + location.toString());
+        return ((int) (location.x*10 + .5)) * 100000 + (int) (location.y *10 + .5);//Plus .5 to each so they round tenths either up or down
     }
 
     public static MapLocation decodeBroadcastLoc(int input) {
         if (input == 0) {
             return null;
         }
-        return new MapLocation((int) input / 100000, input % 100000);
+        MapLocation location = new MapLocation((int) input / 1000000, (input % 100000)/10);
+        debug_println("DECODED: " + location.toString());
+        return location;
     }
 
 

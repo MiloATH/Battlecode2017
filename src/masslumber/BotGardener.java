@@ -62,13 +62,13 @@ public class BotGardener extends RobotPlayer {
                 for (RobotInfo bot : bots) {
                     if (bot.getTeam() != rc.getTeam()) {
                         rc.broadcast(GARDENER_UNDER_ATTACK, encodeBroadcastLoc(bot.getLocation()));
-                        debug_println("ENEMY SEEN");
+                        //debug_println("ENEMY SEEN");
                         enemyFound = true;
                     }
                 }
                 if (!enemyFound) {
                     MapLocation broadcastLocation = decodeBroadcastLoc(rc.readBroadcast(GARDENER_UNDER_ATTACK));
-                    debug_println("NO ENEMY SEEN");
+                    //debug_println("NO ENEMY SEEN");
                     if (broadcastLocation != null
                             && rc.getLocation().distanceTo(broadcastLocation) <= rc.getType().sensorRadius) {
                         rc.broadcast(GARDENER_UNDER_ATTACK, 0);
