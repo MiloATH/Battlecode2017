@@ -18,6 +18,7 @@ public strictfp class RobotPlayer {
     static int TREE_DENSITY_CHANNEL = 120;
     static int GARDENER_UNDER_ATTACK = 130;
     static int NEED_LUMBERJACK_FOR_CLEARING = 140;
+    static int NEED_LUMBERJACK_FOR_CLEARING_TREE_ID = 141;
     static int BASE_LOCATION_CHANNEL = 150;
     static int ENEMY_SEEN_CHANNEL = 900;
     static int GARDENER_LOOKING_FOR_PLANTING = 950;//Needs 3 above
@@ -33,7 +34,7 @@ public strictfp class RobotPlayer {
     static int ROUND_TO_BROADCAST_TREE_DENSITY = 100;
     static int ATTACK_ROUND = 750;
     static int INITIAL_MOVES_BASE = 6;
-    static int MIN_GARDENER_SPACING = 10;//12;
+    static float MIN_GARDENER_SPACING = 4 * GameConstants.BULLET_TREE_RADIUS + 8 * RobotType.GARDENER.bodyRadius;//10;//12;
     static float MIN_GARDENER_CLEARING = 2.75f; //Should be at least GameConstants.BULLET_TREE_RADIUS
     static int MAX_LUMBERJACK_PATIENCE = 100;
 
@@ -56,6 +57,16 @@ public strictfp class RobotPlayer {
     //2:Lumberjack
     //3:Soldier
     static int[] build = {2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
+
+    //Mass Lumberjack flooding method constants
+    public static float MIN_RADIUS_FROM_GARDENERS =
+            2 * GameConstants.BULLET_TREE_RADIUS + RobotType.GARDENER.bodyRadius + RobotType.LUMBERJACK.bodyRadius + 2f;
+
+    public static float MIN_RADIUS_FROM_LUMBERJACKS =
+            2 * RobotType.LUMBERJACK.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + 0.01f;
+
+
 
     public static void run(RobotController rc) throws GameActionException {
         // This is the RobotController object. You use it to perform actions from this robot,
@@ -129,7 +140,7 @@ public strictfp class RobotPlayer {
 
 
     public static int encodeBroadcastLoc(MapLocation location) {
-        return ((int) location.x) * 100000 + (int) location.y;
+        return ((int) (location.x + .5)) * 100000 + (int) (location.y + .5);//Plus .5 to each so they round either up or down
     }
 
     public static MapLocation decodeBroadcastLoc(int input) {
@@ -186,6 +197,24 @@ public strictfp class RobotPlayer {
         return 0;
     }
 
+    /*
+    Same as tryToBuild, but tests more directions for building
+    */
+    public static int fineDeltaTryToBuild(RobotType type, int moneyNeeded) throws GameActionException {
+        //try to build gardeners
+        //can you build a gardener?
+        if (rc.getTeamBullets() > moneyNeeded) {//have enough bullets. assuming we haven't built already.
+            for (int i = 0; i < 72; i++) {
+                Direction d = new Direction((float) (Math.PI * i / 72));
+                if (rc.canBuildRobot(type, d)) {
+                    rc.buildRobot(type, d);
+                    return 1;
+                }
+            }
+        }
+        return 0;
+    }
+
     public static Boolean tryToPlant() throws GameActionException {
         //try to build gardeners
         //can you build a gardener?
@@ -213,11 +242,12 @@ public strictfp class RobotPlayer {
         return false;
     }
 
-    public static Boolean treeInWay(TreeInfo[] trees, MapLocation location) {
+    public static Boolean treeInWay(TreeInfo[] trees, MapLocation location) throws GameActionException{
         for (TreeInfo t : trees) {
             if (t.getTeam() != rc.getTeam() && t.getLocation().distanceTo(location) < MIN_GARDENER_CLEARING) {
                 debug_println("REQUEST CLEARING");
                 rc.setIndicatorDot(location, 0, 255, 0);
+                rc.broadcast(NEED_LUMBERJACK_FOR_CLEARING_TREE_ID, t.getID());
                 return true;
             }
         }
@@ -396,12 +426,16 @@ public strictfp class RobotPlayer {
      */
     public static Direction closestMovableDirection(Direction ideal) {
         if (!rc.hasMoved()) {
+            //Only turn one way first
             for (int i = 0; i <= 36; i++) {
                 Direction offset = new Direction(ideal.radians + (float) (Math.PI * ((float) i) / 36));
                 if (rc.canMove(offset)) {
                     return offset;
                 }
-                offset = new Direction(ideal.radians + (float) (-Math.PI * ((float) i) / 36));
+            }
+            //If you can't turn that way, try the other way
+            for (int i = 0; i <= 36; i++) {
+                Direction offset = new Direction(ideal.radians + (float) (-Math.PI * ((float) i) / 36));
                 if (rc.canMove(offset)) {
                     return offset;
                 }
@@ -420,7 +454,7 @@ public strictfp class RobotPlayer {
     public static MapLocation repel(MapLocation awayFromLocation) throws GameActionException {
         Direction away = rc.getLocation().directionTo(awayFromLocation).opposite();
         Direction closestToAway = closestMovableDirection(away);
-        if(closestToAway!=null && !rc.hasMoved()) {
+        if (closestToAway != null && !rc.hasMoved()) {
             MapLocation repelledLocation = rc.getLocation().add(closestToAway, rc.getType().strideRadius);
             //debug_println("TRYING TO REPEL: " + otherRobot.toString());
             if (rc.canMove(repelledLocation) && !rc.hasMoved()) {

@@ -70,7 +70,7 @@ public class BotArchon extends RobotPlayer {
                 //Read the current one
                 int numberOfGardenerLooking = rc.readBroadcast(GARDENER_LOOKING_FOR_PLANTING + (rc.getRoundNum() - 1) % 3);
                 if (prevNumGard < GARDENER_MAX && numberOfGardenerLooking < MAX_NUMBER_OF_GARDENER_LOOKING) {
-                    int numberOfGardenersMade = prevNumGard + tryToBuild(RobotType.GARDENER, RobotType.GARDENER.bulletCost);
+                    int numberOfGardenersMade = prevNumGard + fineDeltaTryToBuild(RobotType.GARDENER, RobotType.GARDENER.bulletCost);
                     //update number of gardeners made
                     if (numberOfGardenersMade != prevNumGard) {
                         rc.broadcast(GARDENER_CHANNEL, numberOfGardenersMade);

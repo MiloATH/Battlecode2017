@@ -26,22 +26,26 @@ public class BotGardener extends RobotPlayer {
                 //Initiate bots
                 bots = rc.senseNearbyRobots();
 
+
+                Boolean nearAllyTrees = false;
+
                 //Set base location
                 MapLocation base = decodeBroadcastLoc(rc.readBroadcast((BASE_LOCATION_CHANNEL)));
                 if (base == null) {
                     rc.broadcast(BASE_LOCATION_CHANNEL, encodeBroadcastLoc(rc.getLocation()));
                     base = rc.getLocation();
-                }
-
-                //Find good place to plant trees
-                Boolean nearAllyTrees = false;
-                TreeInfo[] nearbyTrees = rc.senseNearbyTrees();
-                for (TreeInfo tree : nearbyTrees) {
-                    if (tree.getTeam() == rc.getTeam() && tree.getLocation().distanceTo(rc.getLocation()) < MIN_GARDENER_SPACING) {//NOTE TREE TO GARDENER spacing
-                        nearAllyTrees = true;
-                        if (!startedPlanting && repel(tree.getLocation()) != null) {
+                } else if (!startedPlanting && base.distanceTo(rc.getLocation()) > RobotType.GARDENER.bodyRadius) {
+                    //Find good place to plant trees
+                    //Move away from ally trees
+                    TreeInfo[] nearbyTrees = rc.senseNearbyTrees();
+                    for (TreeInfo tree : nearbyTrees) {
+                        if (tree.getTeam() == rc.getTeam() && tree.getLocation().distanceTo(rc.getLocation()) < MIN_GARDENER_SPACING) {//NOTE TREE TO GARDENER spacing
+                            nearAllyTrees = true;
                             break;
                         }
+                    }
+                    if (nearAllyTrees) {
+                        gardenerMoveAway();
                     }
                 }
 
@@ -127,8 +131,8 @@ public class BotGardener extends RobotPlayer {
     public static void gardenerWander() throws GameActionException {
         MapLocation base = decodeBroadcastLoc(rc.readBroadcast(BASE_LOCATION_CHANNEL));
         //Wander if near ally gardeners
-        for(RobotInfo b: bots){
-            if(b.getType()==RobotType.GARDENER && b.getTeam() == rc.getTeam()){
+        for (RobotInfo b : bots) {
+            if (b.getType() == RobotType.GARDENER && b.getTeam() == rc.getTeam()) {
                 wander();
                 return;
             }
@@ -139,6 +143,26 @@ public class BotGardener extends RobotPlayer {
             navigateTo(base);
         } else {
             wander();
+        }
+    }
+
+    public static void gardenerMoveAway() throws GameActionException {
+        //Move away from ally units
+        RobotInfo[] nearbyRobots = rc.senseNearbyRobots();
+        for (RobotInfo bot : nearbyRobots) {
+            if (bot.getTeam() == rc.getTeam()) {
+                if ((bot.getType() == RobotType.GARDENER || bot.getType() == RobotType.ARCHON)
+                        && rc.getLocation().distanceTo(bot.getLocation()) < MIN_RADIUS_FROM_GARDENERS) {
+                    if (repel(bot.getLocation()) != null) {
+                        break;
+                    }
+                } else if (bot.getType() == RobotType.LUMBERJACK
+                        && rc.getLocation().distanceTo(bot.getLocation()) < MIN_RADIUS_FROM_LUMBERJACKS) {
+                    if (repel(bot.getLocation()) != null) {
+                        break;
+                    }
+                }
+            }
         }
     }
 }
