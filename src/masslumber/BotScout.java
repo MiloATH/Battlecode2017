@@ -363,10 +363,7 @@ public class BotScout extends RobotPlayer {
         return false;
     }
 
-    public static int compareBotsForInitialSorting(RobotInfo a, RobotInfo b){
-        MapLocation myLocation = rc.getLocation();
-        return (int) (myLocation.distanceTo(a.getLocation()) - myLocation.distanceTo(b.getLocation()));
-    }
+
 
     public static void collectMoney() throws GameActionException{
         TreeInfo[] nearbyTrees = rc.senseNearbyTrees();

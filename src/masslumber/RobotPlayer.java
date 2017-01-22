@@ -20,6 +20,7 @@ public strictfp class RobotPlayer {
     static int NEED_LUMBERJACK_FOR_CLEARING = 140;
     static int NEED_LUMBERJACK_FOR_CLEARING_TREE_ID = 141;
     static int BASE_LOCATION_CHANNEL = 150;
+    static int ENEMY_ARCHON_LOCATIONS_CHANNELS = 850;//Needs at least GameConstants.NUMBER_OF_ARCHONS_MAX above
     static int ENEMY_SEEN_CHANNEL = 900;
     static int GARDENER_LOOKING_FOR_PLANTING = 950;//Needs 3 above
 
@@ -405,7 +406,7 @@ public strictfp class RobotPlayer {
 
     public static void victoryPointsEndgameCheck() throws GameActionException {
         //If we have 10000 bullets, end the game.
-        if (rc.getTeamBullets() >= 1000 * getVictoryPointCost() || (rc.getRoundLimit() - rc.getRoundNum() < 1)) {
+        if (rc.getTeamBullets() >= 1000 * getVictoryPointCost() || (rc.getRoundLimit() - rc.getRoundNum() <= 1)) {
             rc.donate(rc.getTeamBullets());
         }
     }
@@ -464,6 +465,22 @@ public strictfp class RobotPlayer {
         }
         //debug_println("COULDN'T REPEL: " + otherRobot.toString());
         return null;
+    }
+
+    /*
+    For sorting. Will sort robots by distance away from player.
+     */
+    public static int compareBotsForInitialSorting(RobotInfo a, RobotInfo b){
+        MapLocation myLocation = rc.getLocation();
+        return (int) (myLocation.distanceTo(a.getLocation()) - myLocation.distanceTo(b.getLocation()));
+    }
+
+    /*
+    For sorting. Will sort MapLocations by distance away from player.
+     */
+    public static int compareBotsForInitialSorting(MapLocation a, MapLocation b){
+        MapLocation myLocation = rc.getLocation();
+        return (int) (myLocation.distanceTo(a) - myLocation.distanceTo(b));
     }
 
     public static void debug_println(String out) {

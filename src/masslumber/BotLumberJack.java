@@ -11,6 +11,7 @@ public class BotLumberJack extends RobotPlayer {
     //Initiate at start of turn
     public static TreeInfo[] nearbyTrees;
     public static RobotInfo[] nearbyRobots;
+    public static MapLocation base;
 
     public static void loop() throws GameActionException {
         while (true) {
@@ -18,8 +19,8 @@ public class BotLumberJack extends RobotPlayer {
                 victoryPointsEndgameCheck();
                 nearbyTrees = rc.senseNearbyTrees();
                 nearbyRobots = rc.senseNearbyRobots();
+                base = decodeBroadcastLoc(rc.readBroadcast(BASE_LOCATION_CHANNEL));
                 //dodge();
-                moveAwayFromAllies();
                 RobotInfo[] bots = rc.senseNearbyRobots();
                 for (RobotInfo b : bots) {
                     if (b.getTeam() != rc.getTeam() && rc.canStrike()) {
@@ -38,6 +39,9 @@ public class BotLumberJack extends RobotPlayer {
                         break;
                     }
                 }
+
+                moveAwayFromAllies();
+
                 rally();
                 lumberjackNeededRally();
                 lumberjackWander();
@@ -52,7 +56,9 @@ public class BotLumberJack extends RobotPlayer {
         MapLocation location = decodeBroadcastLoc(rc.readBroadcast(NEED_LUMBERJACK_FOR_CLEARING));
         if (location != null) {
             debug_println("Lumberjack requested: " + location.toString());
-            if (location.distanceTo(rc.getLocation()) <= rc.getType().sensorRadius) {
+            //Help gardener only if I can see the tree and am closer to the base then the tree
+            if (location.distanceTo(rc.getLocation()) <= rc.getType().sensorRadius
+                    && (base==null || location.distanceTo(rc.getLocation()) < base.distanceTo(rc.getLocation()))) {
                 //If nearby check there is a tree near the location
                 boolean treeWorthChopping = false;
                 int treeID = rc.readBroadcast(NEED_LUMBERJACK_FOR_CLEARING_TREE_ID);
@@ -75,7 +81,6 @@ public class BotLumberJack extends RobotPlayer {
     public static void lumberjackWander() throws GameActionException {
         //Step slightly away from gardeners
         //debug_println("Lumberjack wandering");
-        MapLocation base = decodeBroadcastLoc(rc.readBroadcast(BASE_LOCATION_CHANNEL));
         MapLocation me = rc.getLocation();
         //Move away from base
         for (RobotInfo bot : nearbyRobots) {
@@ -89,6 +94,24 @@ public class BotLumberJack extends RobotPlayer {
             }
         }
 
+        //Move towards enemy archon initial locations
+        RobotInfo[] nearbyEnemies = rc.senseNearbyRobots(rc.getType().sensorRadius, rc.getTeam().opponent());
+        for(int i = GameConstants.NUMBER_OF_ARCHONS_MAX; --i>=0;){//Access in reverse order.
+            MapLocation archon = decodeBroadcastLoc(rc.readBroadcast(ENEMY_ARCHON_LOCATIONS_CHANNELS + i));
+            debug_println("Checking channel: " + (ENEMY_ARCHON_LOCATIONS_CHANNELS+ i ) + " For archon" );
+            if(archon != null){
+                debug_println("Archon at: " + archon.toString());
+                if(archon.distanceTo(rc.getLocation()) <= rc.getType().sensorRadius && nearbyEnemies.length == 0){
+                    rc.broadcast(ENEMY_ARCHON_LOCATIONS_CHANNELS + i,0);
+                }
+                else {
+                    navigateTo(archon);
+                    break;
+                }
+            }
+        }
+
+
         //If you aren't repeling the base, then you are to far. Go towards the base
         if (base != null) {
             //debug_println("NAVING TO BASE");
@@ -97,6 +120,8 @@ public class BotLumberJack extends RobotPlayer {
                 rc.broadcast(BASE_LOCATION_CHANNEL, 0);
             }
         }
+
+
         //wander();
     }
 
@@ -119,36 +144,5 @@ public class BotLumberJack extends RobotPlayer {
             }
         }
     }
-
-    public static void lumberjackNavigateTo(MapLocation loc) throws GameActionException {
-        //moveAwayFromAllies();
-        goingDir = rc.getLocation().directionTo(loc);
-        if (!rc.hasMoved()) {
-            int leftOrRight = goRight ? -1 : 1;
-            for (int i = 0; i < 72; i++) {
-                Direction offset = new Direction(goingDir.radians + (float) (leftOrRight * 2 * Math.PI * ((float) i) / 72));
-                if (rc.canMove(offset) && !rc.hasMoved()) {
-                    if (i > 0) {
-                        patienceLeft--;
-                        //If lumberjack just stay at it and it will through
-                        if (rc.getType() == RobotType.LUMBERJACK && patienceLeft <= 0) {
-                            goRight = !goRight;
-                            patienceLeft = MAX_LUMBERJACK_PATIENCE;
-                        } else if (patienceLeft <= 0) {
-                            goRight = !goRight;
-                            patienceLeft = MAX_PATIENCE;
-                        }
-                    }
-                    rc.move(offset);
-                    goingDir = offset;
-                    return;
-                }
-            }
-            //Blocked off, just try to get out
-            //  |----> TODO: make it better?
-            goingDir = randomDirection();
-        }
-    }
-
 
 }

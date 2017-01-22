@@ -2,6 +2,8 @@ package masslumber;
 
 import battlecode.common.*;
 
+import java.util.Arrays;
+
 public class BotArchon extends RobotPlayer {
 
 
@@ -11,6 +13,19 @@ public class BotArchon extends RobotPlayer {
         //rc.broadcast(RALLY_LOCATION_CHANNEL, encodeBroadcastLoc(new MapLocation(me.x + 5, me.y + 5)));
         while (true) {
             try {
+                //Initiate enemy archon locations
+                if(rc.getRoundNum()<=1 && rc.readBroadcast(ENEMY_ARCHON_LOCATIONS_CHANNELS) == 0){
+                    MapLocation[] enemyArchons = rc.getInitialArchonLocations(rc.getTeam().opponent());
+                    Arrays.sort(enemyArchons, (a, b) -> -compareBotsForInitialSorting(a,b));//Sort by decreasing distance. furthest first
+                    debug_println("Setting enemy archon locations: " + enemyArchons.length);
+                    for(int i = enemyArchons.length; --i>=0;){//Store them in reverse order.
+                        debug_println("" + (i+ENEMY_ARCHON_LOCATIONS_CHANNELS) + " has location " + enemyArchons[i].toString());
+                        rc.broadcast(ENEMY_ARCHON_LOCATIONS_CHANNELS + i,
+                                encodeBroadcastLoc(enemyArchons[i]));
+                    }
+                }
+
+
                 victoryPointsEndgameCheck();
                 dodge();
                 MapLocation base = decodeBroadcastLoc(rc.readBroadcast(BASE_LOCATION_CHANNEL));
