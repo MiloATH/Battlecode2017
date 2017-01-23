@@ -25,7 +25,7 @@ public strictfp class RobotPlayer {
     static int GARDENER_LOOKING_FOR_PLANTING = 950;//Needs 3 above
 
     // Keep important numbers here
-    static int GARDENER_MAX = 30;//Subject to change by archon run
+    static int GARDENER_MAX = 11;//Subject to change by archon run
     static int MAX_NUMBER_OF_GARDENER_LOOKING = 5;//Changes by in archon run during early game
     static int VERY_EARLY_GAME = 100;
     static int EARLY_GAME = 200;
@@ -141,7 +141,7 @@ public strictfp class RobotPlayer {
 
 
     public static int encodeBroadcastLoc(MapLocation location) {
-        debug_println("ENCODED: " + location.toString());
+        //debug_println("ENCODED: " + location.toString());
         return ((int) (location.x*10 + .5)) * 100000 + (int) (location.y *10 + .5);//Plus .5 to each so they round tenths either up or down
     }
 
@@ -149,9 +149,7 @@ public strictfp class RobotPlayer {
         if (input == 0) {
             return null;
         }
-        MapLocation location = new MapLocation((int) input / 1000000, (input % 100000)/10);
-        debug_println("DECODED: " + location.toString());
-        return location;
+        return new MapLocation((int) input / 1000000, (input % 100000)/10);
     }
 
 

@@ -46,9 +46,9 @@ public class BotLumberJack extends RobotPlayer {
                         break;
                     }
                 }
-                if (!choppingTree) {
+                /*if (!choppingTree) {
                     moveAwayFromAllies();
-                }
+                }*/
                 rally();
                 lumberjackNeededRally();
                 if (!choppingTree) {
@@ -120,7 +120,8 @@ public class BotLumberJack extends RobotPlayer {
                 }
             }
         }
-
+        //If all archons killed, then swarm without scrunching
+        moveAwayFromAllies();
 
         //If you aren't repeling the base, then you are to far. Go towards the base
         if (base != null) {
