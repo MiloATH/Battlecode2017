@@ -1,4 +1,4 @@
-package masslumber;
+package onegardenerrush;
 
 import battlecode.common.*;
 
@@ -11,7 +11,6 @@ public class BotLumberJack extends RobotPlayer {
     public static TreeInfo[] nearbyTrees;
     public static RobotInfo[] nearbyRobots;
     public static MapLocation base;
-    public static float LUMBERJACK_ATTACK_RADIUS = 1f;//SEE SPECS FOR RADIUS. THIS IS THE RADIUS FROM THE EDGE OF THE LUMBERJACK
 
     public static void loop() throws GameActionException {
         while (true) {
@@ -26,11 +25,8 @@ public class BotLumberJack extends RobotPlayer {
                 //dodge();
                 RobotInfo[] bots = rc.senseNearbyRobots();
                 for (RobotInfo b : bots) {
-                    if (b.getTeam() != rc.getTeam()){
-                        if(rc.canStrike() && rc.getLocation().distanceTo(b.getLocation()) - rc.getType().bodyRadius - b.getType().bodyRadius < LUMBERJACK_ATTACK_RADIUS)
-                        {
-                            rc.strike();
-                        }
+                    if (b.getTeam() != rc.getTeam() && rc.canStrike()) {
+                        rc.strike();
                         Direction chase = rc.getLocation().directionTo(b.getLocation());
                         if (rc.canMove(chase) && !rc.hasMoved()) {
                             rc.move(chase);
