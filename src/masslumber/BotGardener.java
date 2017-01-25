@@ -8,7 +8,7 @@ public class BotGardener extends RobotPlayer {
     public static RobotInfo[] bots;
 
     static void loop() throws GameActionException {
-        if (rc.getRoundNum() >= ROUND_TO_BROADCAST_TREE_DENSITY + 1) {
+        /*if (rc.getRoundNum() >= ROUND_TO_BROADCAST_TREE_DENSITY + 1) {
             int treeDensity = rc.readBroadcast(TREE_DENSITY_CHANNEL);
             if (treeDensity > 25) {
                 INITIAL_MOVES_BASE = 15;
@@ -16,7 +16,7 @@ public class BotGardener extends RobotPlayer {
             if (treeDensity > 80) {
                 INITIAL_MOVES_BASE = 20;
             }
-        }
+        }*/
         while (true) {
             try {
                 victoryPointsEndgameCheck();
@@ -70,7 +70,7 @@ public class BotGardener extends RobotPlayer {
                     MapLocation broadcastLocation = decodeBroadcastLoc(rc.readBroadcast(GARDENER_UNDER_ATTACK));
                     //debug_println("NO ENEMY SEEN");
                     if (broadcastLocation != null
-                            && rc.getLocation().distanceTo(broadcastLocation) <= rc.getType().sensorRadius) {
+                            && rc.getLocation().distanceTo(broadcastLocation) < rc.getType().sensorRadius) {
                         rc.broadcast(GARDENER_UNDER_ATTACK, 0);
                         debug_println("RALLY CALLED OFF");
                     }
@@ -79,6 +79,7 @@ public class BotGardener extends RobotPlayer {
                 int prevScouts = rc.readBroadcast(SCOUTS_CHANNEL);
                 int prevTree = rc.readBroadcast(TREE_CHANNEL);
                 int prevSold = rc.readBroadcast(SOLDIER_CHANNEL);
+                int prevTank = rc.readBroadcast(TANK_CHANNEL);
                 int buildNum = (prevLum + prevScouts + prevTree + prevSold) % build.length;
                 if (prevScouts == 0) {
                     if (tryToBuild(RobotType.SCOUT) == 1) {
@@ -109,6 +110,10 @@ public class BotGardener extends RobotPlayer {
                         case 3://Soldiers
                             rc.broadcast(SOLDIER_CHANNEL, prevSold + tryToBuild(RobotType.SOLDIER));
                             break;
+                        case 4:
+                            if(tryToBuild(RobotType.TANK) == 1){
+                                rc.broadcast(TANK_CHANNEL, prevTank + 1);
+                            }
                     }
                 }
 

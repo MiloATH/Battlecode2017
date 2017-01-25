@@ -62,12 +62,12 @@ public class BotArchon extends RobotPlayer {
                     }
                 }
                 //System.out.println("GARDENER UNDER ATTACK INPUT: " + gardenerUnderAttack);
-                if (gardenerUnderAttack != 0) {
+                /*if (gardenerUnderAttack != 0) {
                     //System.out.println("Rally at gardener under attack");
                     rc.broadcast(RALLY_LOCATION_CHANNEL, gardenerUnderAttack);
                 } else {
                     rc.broadcast(RALLY_LOCATION_CHANNEL, 0);
-                }
+                }*/
                     /*else if (enemySeen != 0) {
                     if (rc.getRoundNum() > ATTACK_ROUND) {//ATTACK
                         rc.broadcast(RALLY_LOCATION_CHANNEL, enemySeen);

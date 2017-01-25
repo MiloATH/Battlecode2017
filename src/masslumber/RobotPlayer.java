@@ -8,6 +8,7 @@ public strictfp class RobotPlayer {
     static RobotController rc;
     static Random myRand;
     // Keep broadcast channels
+    static int TANK_CHANNEL = 40;
     static int GARDENER_CHANNEL = 50;
     static int LUMBERJACK_CHANNEL = 60;
     static int SCOUTS_CHANNEL = 70;
@@ -57,7 +58,8 @@ public strictfp class RobotPlayer {
     //1:Scout
     //2:Lumberjack
     //3:Soldier
-    static int[] build = { 2, 2, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0};
+    //4:Tank
+    static int[] build = {2, 2, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0};
 
 
     //Mass Lumberjack flooding method constants
@@ -66,7 +68,6 @@ public strictfp class RobotPlayer {
 
     public static float MIN_RADIUS_FROM_LUMBERJACKS =
             2 * RobotType.LUMBERJACK.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + 0.01f;
-
 
 
     public static void run(RobotController rc) throws GameActionException {
@@ -142,14 +143,14 @@ public strictfp class RobotPlayer {
 
     public static int encodeBroadcastLoc(MapLocation location) {
         //debug_println("ENCODED: " + location.toString());
-        return ((int) (location.x*10 + .5)) * 100000 + (int) (location.y *10 + .5);//Plus .5 to each so they round tenths either up or down
+        return ((int) (location.x * 10 + .5)) * 100000 + (int) (location.y * 10 + .5);//Plus .5 to each so they round tenths either up or down
     }
 
     public static MapLocation decodeBroadcastLoc(int input) {
         if (input == 0) {
             return null;
         }
-        return new MapLocation((int) input / 1000000, (input % 100000)/10);
+        return new MapLocation((int) input / 1000000, (input % 100000) / 10);
     }
 
 
@@ -244,7 +245,7 @@ public strictfp class RobotPlayer {
         return false;
     }
 
-    public static Boolean treeInWay(TreeInfo[] trees, MapLocation location) throws GameActionException{
+    public static Boolean treeInWay(TreeInfo[] trees, MapLocation location) throws GameActionException {
         for (TreeInfo t : trees) {
             if (t.getTeam() != rc.getTeam() && t.getLocation().distanceTo(location) < MIN_GARDENER_CLEARING) {
                 debug_println("REQUEST CLEARING");
@@ -471,7 +472,7 @@ public strictfp class RobotPlayer {
     /*
     For sorting. Will sort robots by distance away from player.
      */
-    public static int compareBotsForInitialSorting(RobotInfo a, RobotInfo b){
+    public static int compareBotsForInitialSorting(RobotInfo a, RobotInfo b) {
         MapLocation myLocation = rc.getLocation();
         return (int) (myLocation.distanceTo(a.getLocation()) - myLocation.distanceTo(b.getLocation()));
     }
@@ -479,9 +480,42 @@ public strictfp class RobotPlayer {
     /*
     For sorting. Will sort MapLocations by distance away from player.
      */
-    public static int compareBotsForInitialSorting(MapLocation a, MapLocation b){
+    public static int compareBotsForInitialSorting(MapLocation a, MapLocation b) {
         MapLocation myLocation = rc.getLocation();
         return (int) (myLocation.distanceTo(a) - myLocation.distanceTo(b));
+    }
+
+    public static void gardenerUnderAttackRally() throws GameActionException {
+        MapLocation input = decodeBroadcastLoc(rc.readBroadcast(GARDENER_UNDER_ATTACK));
+        if (input != null) {
+            navigateTo(input);//Navigate to first since the gardener may see something I don't.
+            if (rc.getLocation().distanceTo(input) < rc.getType().sensorRadius
+                    && rc.senseNearbyRobots(rc.getType().sensorRadius, rc.getTeam().opponent()).length == 0) {
+                rc.broadcast(GARDENER_UNDER_ATTACK, 0);
+            }
+        }
+    }
+
+    /*
+     * Returns the next enemy archon location based off initial archon locations.
+     */
+    public static MapLocation getNextInitialArchonLocation() throws GameActionException {
+        RobotInfo[] nearbyEnemies = rc.senseNearbyRobots(rc.getType().sensorRadius, rc.getTeam().opponent());
+        for (int i = GameConstants.NUMBER_OF_ARCHONS_MAX; --i >= 0; ) {//Access in reverse order.
+            MapLocation archon = decodeBroadcastLoc(rc.readBroadcast(ENEMY_ARCHON_LOCATIONS_CHANNELS + i));
+            //debug_println("Checking channel: " + (ENEMY_ARCHON_LOCATIONS_CHANNELS+ i ) + " For archon" );
+            if (archon != null) {
+                if (archon.distanceTo(rc.getLocation()) < rc.getType().sensorRadius && nearbyEnemies.length == 0) {
+                    debug_println("Archon at: " + archon.toString());
+                    debug_println("ENEMY ARCHON KILLED");
+                    rc.broadcast(ENEMY_ARCHON_LOCATIONS_CHANNELS + i, 0);
+                } else {
+                    rc.setIndicatorDot(archon, 0, 0, 255);
+                    return archon;
+                }
+            }
+        }
+        return null;
     }
 
     public static void debug_println(String out) {
