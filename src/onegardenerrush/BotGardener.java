@@ -6,9 +6,10 @@ import battlecode.common.*;
 public class BotGardener extends RobotPlayer {
 
     public static RobotInfo[] bots;
+    public static int MAX_INITIAL_GARDENER_MOVES = 900;
 
     static void loop() throws GameActionException {
-        if (rc.getRoundNum() >= ROUND_TO_BROADCAST_TREE_DENSITY + 1) {
+        /*if (rc.getRoundNum() >= ROUND_TO_BROADCAST_TREE_DENSITY + 1) {
             int treeDensity = rc.readBroadcast(TREE_DENSITY_CHANNEL);
             if (treeDensity > 25) {
                 INITIAL_MOVES_BASE = 15;
@@ -16,7 +17,7 @@ public class BotGardener extends RobotPlayer {
             if (treeDensity > 80) {
                 INITIAL_MOVES_BASE = 20;
             }
-        }
+        }*/
         while (true) {
             try {
                 victoryPointsEndgameCheck();
@@ -49,11 +50,11 @@ public class BotGardener extends RobotPlayer {
                     }
                 }
 
-                //Not near anyone, just wander.
-                int moveUntilRound = 10;//5 * (GARDENER_MAX * rc.getRoundNum() / rc.getRoundLimit() + 1);
-                //gardenerWander();
-                if (numberOfRoundsAlive < moveUntilRound) {
-                    gardenerWander();
+                //Find goood place to plant
+                Direction bad = badPlantingDirection();
+                if(bad != null && !startedPlanting){
+                    //If there is a bad direction then repel
+                    repel(rc.getLocation().add(bad,rc.getType().strideRadius));
                 }
 
                 //Check if under attack
@@ -70,7 +71,7 @@ public class BotGardener extends RobotPlayer {
                     MapLocation broadcastLocation = decodeBroadcastLoc(rc.readBroadcast(GARDENER_UNDER_ATTACK));
                     //debug_println("NO ENEMY SEEN");
                     if (broadcastLocation != null
-                            && rc.getLocation().distanceTo(broadcastLocation) <= rc.getType().sensorRadius) {
+                            && rc.getLocation().distanceTo(broadcastLocation) < rc.getType().sensorRadius) {
                         rc.broadcast(GARDENER_UNDER_ATTACK, 0);
                         debug_println("RALLY CALLED OFF");
                     }
@@ -79,12 +80,8 @@ public class BotGardener extends RobotPlayer {
                 int prevScouts = rc.readBroadcast(SCOUTS_CHANNEL);
                 int prevTree = rc.readBroadcast(TREE_CHANNEL);
                 int prevSold = rc.readBroadcast(SOLDIER_CHANNEL);
+                int prevTank = rc.readBroadcast(TANK_CHANNEL);
                 int buildNum = (prevLum + prevScouts + prevTree + prevSold) % build.length;
-                if (prevScouts == 0) {
-                    if (tryToBuild(RobotType.SCOUT) == 1) {
-                        rc.broadcast(SCOUTS_CHANNEL, prevScouts + 1);
-                    }
-                }
                 if (buildNum < build.length) {
                     switch (build[buildNum]) {
                         case 0://Tree
@@ -92,9 +89,9 @@ public class BotGardener extends RobotPlayer {
                             /*debug_println("Started Planting?: " + startedPlanting + "\nNear Ally Gardeners: " + nearAllyTrees +
                                     "\n #rounds Alive more than/equal moveUntilRound?: " + (numberOfRoundsAlive >= moveUntilRound));*/
                             //TODO: Only build if close to base or allies that are buildings
-                            if ((startedPlanting || !nearAllyTrees) &&
-                                    numberOfRoundsAlive >= moveUntilRound &&
-                                    (tryToPlant() || rc.getTeamBullets() > 2 * SURPLUS_BULLETS)) {//Short circut evaluation. Only plants after moveUntilRound
+                            if ((startedPlanting || !nearAllyTrees)
+                                    && (badPlantingDirection() == null || startedPlanting || numberOfRoundsAlive > MAX_INITIAL_GARDENER_MOVES)
+                                    && (tryToPlant() || rc.getTeamBullets() > 2 * SURPLUS_BULLETS)) {//Short circut evaluation. Only plants after moveUntilRound
                                 rc.broadcast(TREE_CHANNEL, prevTree + 1);
                             }
                             break;
@@ -109,6 +106,11 @@ public class BotGardener extends RobotPlayer {
                         case 3://Soldiers
                             rc.broadcast(SOLDIER_CHANNEL, prevSold + tryToBuild(RobotType.SOLDIER));
                             break;
+                        case 4:
+                            debug_println("TRYING TO BUILD TANKS");
+                            if (fineTryToBuild(RobotType.TANK) == 1) {
+                                rc.broadcast(TANK_CHANNEL, prevTank + 1);
+                            }
                     }
                 }
 
@@ -164,5 +166,17 @@ public class BotGardener extends RobotPlayer {
                 }
             }
         }
+    }
+
+    /*
+    Returns true if gardener can build in all 6 directions
+     */
+    public static Direction badPlantingDirection() {
+        for (int i = 0; i < 6; i++) {
+            if (!rc.canPlantTree(dirList[i])) {
+                return dirList[i];
+            }
+        }
+        return null;
     }
 }

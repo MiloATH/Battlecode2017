@@ -32,27 +32,11 @@ public class BotArchon extends RobotPlayer {
                 if (base != null) {
                     navigateTo(base);
                 }
-                if (rc.getRoundNum() < VERY_EARLY_GAME) {
-                    GARDENER_MAX = 1;
-                } else {
-                    GARDENER_MAX = 30;
-                }
-
-                if (rc.getRoundNum() < EARLY_GAME) {
-                    MAX_NUMBER_OF_GARDENER_LOOKING = 2;
-                }
-                if (rc.getRoundNum() >= EARLY_GAME && rc.getRoundNum() < MID_GAME) {
-                    MAX_NUMBER_OF_GARDENER_LOOKING = 3;
-
-                }
-                if (rc.getRoundNum() >= MID_GAME) {
-                    MAX_NUMBER_OF_GARDENER_LOOKING = 5;
-                }
                 //TODO: make it better or remove middleman
                 //Set rally point if enemy seen and above a round #
-                int enemySeen = rc.readBroadcast(ENEMY_SEEN_CHANNEL);
-                int gardenerUnderAttack = rc.readBroadcast(GARDENER_UNDER_ATTACK);
-                if (rc.getRoundNum() == ROUND_TO_BROADCAST_TREE_DENSITY + 1) {
+                //int enemySeen = rc.readBroadcast(ENEMY_SEEN_CHANNEL);
+                //int gardenerUnderAttack = rc.readBroadcast(GARDENER_UNDER_ATTACK);
+                /*if (rc.getRoundNum() == ROUND_TO_BROADCAST_TREE_DENSITY + 1) {
                     int treeDensity = rc.readBroadcast(TREE_DENSITY_CHANNEL);
                     if (treeDensity > 30) {
                         ATTACK_ROUND = 950;
@@ -60,14 +44,14 @@ public class BotArchon extends RobotPlayer {
                     if (treeDensity > 60) {
                         ATTACK_ROUND = 1250;
                     }
-                }
+                }*/
                 //System.out.println("GARDENER UNDER ATTACK INPUT: " + gardenerUnderAttack);
-                if (gardenerUnderAttack != 0) {
+                /*if (gardenerUnderAttack != 0) {
                     //System.out.println("Rally at gardener under attack");
                     rc.broadcast(RALLY_LOCATION_CHANNEL, gardenerUnderAttack);
                 } else {
                     rc.broadcast(RALLY_LOCATION_CHANNEL, 0);
-                }
+                }*/
                     /*else if (enemySeen != 0) {
                     if (rc.getRoundNum() > ATTACK_ROUND) {//ATTACK
                         rc.broadcast(RALLY_LOCATION_CHANNEL, enemySeen);
@@ -81,6 +65,11 @@ public class BotArchon extends RobotPlayer {
 
                 //Build gardener if less than max
                 int prevNumGard = rc.readBroadcast(GARDENER_CHANNEL);
+
+                //Destory yourself if there is already a gardener.
+                if(prevNumGard > 0){
+                    rc.disintegrate();
+                }
 
                 //Read the current one
                 int numberOfGardenerLooking = rc.readBroadcast(GARDENER_LOOKING_FOR_PLANTING + (rc.getRoundNum() - 1) % 3);

@@ -8,6 +8,7 @@ public strictfp class RobotPlayer {
     static RobotController rc;
     static Random myRand;
     // Keep broadcast channels
+    static int TANK_CHANNEL = 40;
     static int GARDENER_CHANNEL = 50;
     static int LUMBERJACK_CHANNEL = 60;
     static int SCOUTS_CHANNEL = 70;
@@ -25,7 +26,7 @@ public strictfp class RobotPlayer {
     static int GARDENER_LOOKING_FOR_PLANTING = 950;//Needs 3 above
 
     // Keep important numbers here
-    static int GARDENER_MAX = 11;//Subject to change by archon run
+    static int GARDENER_MAX = 1;//Subject to change by archon run
     static int MAX_NUMBER_OF_GARDENER_LOOKING = 5;//Changes by in archon run during early game
     static int VERY_EARLY_GAME = 100;
     static int EARLY_GAME = 200;
@@ -57,7 +58,14 @@ public strictfp class RobotPlayer {
     //1:Scout
     //2:Lumberjack
     //3:Soldier
-    static int[] build = { 2, 2, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0};
+    //4:Tank
+    static int[] build = {0, 0, 3, 0, 0, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+            4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4};
+
+
+    /*
+        Strategy: Build one gardeners, one soldier then only tanks
+     */
 
 
     //Mass Lumberjack flooding method constants
@@ -66,7 +74,6 @@ public strictfp class RobotPlayer {
 
     public static float MIN_RADIUS_FROM_LUMBERJACKS =
             2 * RobotType.LUMBERJACK.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + 0.01f;
-
 
 
     public static void run(RobotController rc) throws GameActionException {
@@ -119,37 +126,32 @@ public strictfp class RobotPlayer {
 
 
     public static void wander() throws GameActionException {
-        try {//TODO. make it better
-            if (!rc.hasMoved()) {
-                while (Clock.getBytecodesLeft() > 100) {
-                    int leftOrRight = rand.nextBoolean() ? -1 : 1;
-                    for (int i = 0; i < 72; i++) {
-                        Direction offset = new Direction(goingDir.radians + (float) (leftOrRight * 2 * Math.PI * ((float) i) / 72));
-                        if (rc.canMove(offset) && !rc.hasMoved()) {
-                            rc.move(offset);
-                            goingDir = offset;
-                            return;
-                        }
-                    }
-                    goingDir = randomDirection();
+        if (!rc.hasMoved()) {
+            int leftOrRight = rand.nextBoolean() ? -1 : 1;
+            for (int i = 0; i < 72; i++) {
+                Direction offset = new Direction(goingDir.radians + (float) (leftOrRight * 2 * Math.PI * ((float) i) / 72));
+                if (rc.canMove(offset) && !rc.hasMoved()) {
+                    rc.move(offset);
+                    goingDir = offset;
+                    return;
                 }
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+            goingDir = randomDirection();
         }
+
     }
 
 
     public static int encodeBroadcastLoc(MapLocation location) {
         //debug_println("ENCODED: " + location.toString());
-        return ((int) (location.x*10 + .5)) * 100000 + (int) (location.y *10 + .5);//Plus .5 to each so they round tenths either up or down
+        return ((int) (location.x * 10 + .5)) * 100000 + (int) (location.y * 10 + .5);//Plus .5 to each so they round tenths either up or down
     }
 
     public static MapLocation decodeBroadcastLoc(int input) {
         if (input == 0) {
             return null;
         }
-        return new MapLocation((int) input / 1000000, (input % 100000)/10);
+        return new MapLocation((int) input / 1000000, (input % 100000) / 10);
     }
 
 
@@ -189,7 +191,7 @@ public strictfp class RobotPlayer {
         //try to build gardeners
         //can you build a gardener?
         if (rc.getTeamBullets() > moneyNeeded) {//have enough bullets. assuming we haven't built already.
-            for (int i = 0; i < 6; i++) {
+            for (int i = dirList.length - 1; i >= 0; i--) {
                 if (rc.canBuildRobot(type, dirList[i])) {
                     rc.buildRobot(type, dirList[i]);
                     return 1;
@@ -198,6 +200,26 @@ public strictfp class RobotPlayer {
         }
         return 0;
     }
+
+    public static int fineTryToBuild(RobotType t) throws GameActionException {
+        return fineTryToBuild(t, t.bulletCost);
+    }
+
+    public static int fineTryToBuild(RobotType type, int moneyNeeded) throws GameActionException {
+        //try to build gardeners
+        //can you build a gardener?
+        if (rc.getTeamBullets() > moneyNeeded) {//have enough bullets. assuming we haven't built already.
+            for (int i = 0; i < 72; i++) {
+                Direction buildDir = new Direction((float) (2 * Math.PI * (i / 72f)));
+                if (rc.canBuildRobot(type, buildDir)) {
+                    rc.buildRobot(type, buildDir);
+                    return 1;
+                }
+            }
+        }
+        return 0;
+    }
+
 
     /*
     Same as tryToBuild, but tests more directions for building
@@ -222,8 +244,8 @@ public strictfp class RobotPlayer {
         //can you build a gardener?
         //System.out.println("PLANTING");
         if (rc.getTeamBullets() > GameConstants.BULLET_TREE_COST) {//have enough bullets. assuming we haven't built already.
-            for (int i = 0; i < 6; i++) {
-                if (i != openDirFromList && rc.canPlantTree(dirList[i])) {
+            for (int i = 0; i < 4; i++) {
+                if (rc.canPlantTree(dirList[i])) {
                     rc.plantTree(dirList[i]);
                     startedPlanting = true;
                     //If lumberjacks were called to clear a tree in the way. Let them know it was cleared.
@@ -244,7 +266,7 @@ public strictfp class RobotPlayer {
         return false;
     }
 
-    public static Boolean treeInWay(TreeInfo[] trees, MapLocation location) throws GameActionException{
+    public static Boolean treeInWay(TreeInfo[] trees, MapLocation location) throws GameActionException {
         for (TreeInfo t : trees) {
             if (t.getTeam() != rc.getTeam() && t.getLocation().distanceTo(location) < MIN_GARDENER_CLEARING) {
                 debug_println("REQUEST CLEARING");
@@ -471,7 +493,7 @@ public strictfp class RobotPlayer {
     /*
     For sorting. Will sort robots by distance away from player.
      */
-    public static int compareBotsForInitialSorting(RobotInfo a, RobotInfo b){
+    public static int compareBotsForInitialSorting(RobotInfo a, RobotInfo b) {
         MapLocation myLocation = rc.getLocation();
         return (int) (myLocation.distanceTo(a.getLocation()) - myLocation.distanceTo(b.getLocation()));
     }
@@ -479,10 +501,46 @@ public strictfp class RobotPlayer {
     /*
     For sorting. Will sort MapLocations by distance away from player.
      */
-    public static int compareBotsForInitialSorting(MapLocation a, MapLocation b){
+    public static int compareBotsForInitialSorting(MapLocation a, MapLocation b) {
         MapLocation myLocation = rc.getLocation();
         return (int) (myLocation.distanceTo(a) - myLocation.distanceTo(b));
     }
+
+    public static void gardenerUnderAttackRally() throws GameActionException {
+        MapLocation input = decodeBroadcastLoc(rc.readBroadcast(GARDENER_UNDER_ATTACK));
+        if (input != null) {
+            navigateTo(input);//Navigate to first since the gardener may see something I don't.
+            if (rc.getLocation().distanceTo(input) < rc.getType().sensorRadius
+                    && rc.senseNearbyRobots(rc.getType().sensorRadius, rc.getTeam().opponent()).length == 0) {
+                rc.broadcast(GARDENER_UNDER_ATTACK, 0);
+            }
+        } else {
+            navigateTo(input);
+        }
+    }
+
+    /*
+     * Returns the next enemy archon location based off initial archon locations.
+     */
+    public static MapLocation getNextInitialArchonLocation() throws GameActionException {
+        RobotInfo[] nearbyEnemies = rc.senseNearbyRobots(rc.getType().sensorRadius, rc.getTeam().opponent());
+        for (int i = GameConstants.NUMBER_OF_ARCHONS_MAX; --i >= 0; ) {//Access in reverse order.
+            MapLocation archon = decodeBroadcastLoc(rc.readBroadcast(ENEMY_ARCHON_LOCATIONS_CHANNELS + i));
+            //debug_println("Checking channel: " + (ENEMY_ARCHON_LOCATIONS_CHANNELS+ i ) + " For archon" );
+            if (archon != null) {
+                if (archon.distanceTo(rc.getLocation()) < rc.getType().sensorRadius && nearbyEnemies.length == 0) {
+                    debug_println("Archon at: " + archon.toString());
+                    debug_println("ENEMY ARCHON KILLED");
+                    rc.broadcast(ENEMY_ARCHON_LOCATIONS_CHANNELS + i, 0);
+                } else {
+                    rc.setIndicatorDot(archon, 0, 0, 255);
+                    return archon;
+                }
+            }
+        }
+        return null;
+    }
+
 
     public static void debug_println(String out) {
         System.out.println(out);

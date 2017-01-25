@@ -11,6 +11,7 @@ public class BotLumberJack extends RobotPlayer {
     public static TreeInfo[] nearbyTrees;
     public static RobotInfo[] nearbyRobots;
     public static MapLocation base;
+    public static float LUMBERJACK_ATTACK_RADIUS = 1f;//SEE SPECS FOR RADIUS. THIS IS THE RADIUS FROM THE EDGE OF THE LUMBERJACK
 
     public static void loop() throws GameActionException {
         while (true) {
@@ -25,8 +26,10 @@ public class BotLumberJack extends RobotPlayer {
                 //dodge();
                 RobotInfo[] bots = rc.senseNearbyRobots();
                 for (RobotInfo b : bots) {
-                    if (b.getTeam() != rc.getTeam() && rc.canStrike()) {
-                        rc.strike();
+                    if (b.getTeam() != rc.getTeam()){
+                        if(rc.canStrike() && rc.getLocation().distanceTo(b.getLocation()) - rc.getType().bodyRadius - b.getType().bodyRadius < LUMBERJACK_ATTACK_RADIUS){
+                            rc.strike();
+                        }
                         Direction chase = rc.getLocation().directionTo(b.getLocation());
                         if (rc.canMove(chase) && !rc.hasMoved()) {
                             rc.move(chase);
@@ -50,6 +53,7 @@ public class BotLumberJack extends RobotPlayer {
                     moveAwayFromAllies();
                 }*/
                 rally();
+                gardenerUnderAttackRally();
                 lumberjackNeededRally();
                 if (!choppingTree) {
                     lumberjackWander();
@@ -103,23 +107,11 @@ public class BotLumberJack extends RobotPlayer {
             }
         }*/
 
-        //Move towards enemy archon initial locations
-        RobotInfo[] nearbyEnemies = rc.senseNearbyRobots(rc.getType().sensorRadius, rc.getTeam().opponent());
-        for (int i = GameConstants.NUMBER_OF_ARCHONS_MAX; --i >= 0; ) {//Access in reverse order.
-            MapLocation archon = decodeBroadcastLoc(rc.readBroadcast(ENEMY_ARCHON_LOCATIONS_CHANNELS + i));
-            //debug_println("Checking channel: " + (ENEMY_ARCHON_LOCATIONS_CHANNELS+ i ) + " For archon" );
-            if (archon != null) {
-                if (archon.distanceTo(rc.getLocation()) < rc.getType().sensorRadius && nearbyEnemies.length == 0) {
-                    debug_println("Archon at: " + archon.toString());
-                    debug_println("ENEMY ARCHON KILLED");
-                    rc.broadcast(ENEMY_ARCHON_LOCATIONS_CHANNELS + i, 0);
-                } else {
-                    rc.setIndicatorDot(archon, 0, 0, 255);
-                    navigateTo(archon);
-                    break;
-                }
-            }
+        MapLocation nextArchon = getNextInitialArchonLocation();
+        if(nextArchon!=null){
+            navigateTo(nextArchon);
         }
+
         //If all archons killed, then swarm without scrunching
         moveAwayFromAllies();
 
