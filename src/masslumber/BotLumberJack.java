@@ -2,8 +2,6 @@ package masslumber;
 
 import battlecode.common.*;
 
-import java.awt.*;
-
 public class BotLumberJack extends RobotPlayer {
 
 
