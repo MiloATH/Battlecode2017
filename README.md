@@ -18,5 +18,4 @@ ROUND 5: Oak's Disciples vs. test bot please ignore (2-0)
 ROUND 5 Loser's B: test bot please ignore vs insert farming pun here (2-1)  
 ROUND 6 Loser's A: Air Force Zero vs test bot please ignore (2-0)  
 
-[Here is a clip of our epic win against Farming Pun.]
-(https://clips.twitch.tv/PreciousCharmingEggplantHeyGirl)
+[Here is a clip of our epic win against Farming Pun.](https://clips.twitch.tv/PreciousCharmingEggplantHeyGirl)
